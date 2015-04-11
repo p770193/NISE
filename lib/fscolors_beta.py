@@ -5,17 +5,17 @@ Created on Fri Aug 08 22:31:23 2014
 @author: Dan
 """
 
-import os#, sys
-#import time
+import os
 import numpy as np
-import matplotlib
+from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import matplotlib.colors as mplcolors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from scipy.interpolate import griddata, interp1d
+from scipy.interpolate import interp1d
 import matplotlib.gridspec as grd
 from scan import Axis
-matplotlib.rcParams['contour.negative_linestyle'] = 'solid'
+
+rcParams['contour.negative_linestyle'] = 'solid'
 
 class plot_artist:
     """
@@ -134,7 +134,7 @@ class plot_artist:
             plot lays out the contour figure, but also stores some info about xyz
             to make it easy to calculate colorbars and such
         """
-        matplotlib.rcParams.update({
+        rcParams.update({
             'font.size':self.font_size
         })
         # delete old plot data stored in the plt class

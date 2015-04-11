@@ -1,4 +1,4 @@
-from NISE.lib.misc import *
+from .misc import *
 
 # factor used to convert FWHM to stdev for function definition
 # gaussian defined such that FWHM,intensity scale = sigma * 2 * sqrt(ln(2))

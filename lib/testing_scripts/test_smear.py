@@ -20,8 +20,8 @@ if __name__ == '__main__':
     reload(m)
     
     autosave  = True
-    imported_before = True
-    imported_after  = True
+    imported_before = False
+    imported_after  = False
     add_nrb   = False
     use_inhom = False
     plot      = True
@@ -29,17 +29,18 @@ if __name__ == '__main__':
     gh_quad   = False
     view_kernel = True
     make_movie = False
-    TOs       = [5]
+    folder_path = NISE_path
+    TOs       = [1,2,3,4,5,6]
     nrb_level = 0.5 # amplitude, relative to sig max
-    smear_extent = 500. # inohomogeneous broadening fwhm, in wn
+    smear_extent = 1000. # inohomogeneous broadening fwhm, in wn
     slitwidth = None#120.0 # width in wavenumbers; set to none if no slit
     # takes ~ 50 pts per second (with no inhomogeneity)
     angle = np.pi / 4.
-    rel_path1 = r'\data\2015.04.09 14-59-08'
+    rel_path1 = r'\data\2015.04.09 22-48-13'
     #rel_path2 = r'\data\2015.04.07 20-55-42 - correlated'
     rel_path2 = r'\data\2015.04.09 16-03-37'
     if imported_before:
-        filepath = r''.join([NISE_path, rel_path1])
+        filepath = r''.join([folder_path, rel_path1])
         out1 = trive.S.Scan._import(filepath)
         w1 = out1.axis_objs[0]
         w2 = out1.axis_objs[1]
@@ -54,10 +55,10 @@ if __name__ == '__main__':
         ws = trive.ws
         d2 = trive.d2
         d1 = trive.d1
-        w1.points = np.linspace(5000, 9000, num=31)
-        w2.points = np.linspace(5000, 9000, num=30)
+        w1.points = np.linspace(5000, 9000, num=61)
+        w2.points = np.linspace(5000, 9000, num=61)
         #trive.ws.points = np.linspace(6000, 8800, num=21)
-        d2.points = np.linspace(-50, 100, num=4)
+        d2.points = np.linspace(-100, 100, num=11)
         #d1.points = np.linspace(-125, 125, num=15)
         trive.exp.timestep = 2.0
         if use_inhom:
@@ -84,16 +85,10 @@ if __name__ == '__main__':
         filepath = r''.join([NISE_path, rel_path2])
         out2 = trive.S.Scan._import(filepath)
     else:
-        sig2 = out1.smear(0,1,smear_extent,50,theta=angle)
-        from copy import deepcopy
-        #print 'before deepcopy'
-        #print out1.efp[15,15,0]
-        out2 = deepcopy(out1)
-        #print 'after deepcopy'
-        #print out1.efp[15,15,0]
-        out2.sig = sig2
-        out2.save()
+        out2 = out1.smear(0,1,smear_extent,20,theta=angle)
     if view_kernel:
+        pass
+        """
         import matplotlib.pyplot as plt
         plt.figure()
         s_maj = smear_extent / 2*np.sqrt(2*np.log(2)) 
@@ -109,10 +104,10 @@ if __name__ == '__main__':
         kk =  np.exp(-uu**2 -vv**2)
         # normalize the distribution
         kk /= kk.sum()
-        import NISE.lib.fscolors_beta as f
         plt.contourf(x,y, kk, 200, cmap=f.plot_artist.mycm)
         plt.colorbar()
         plt.savefig(out2.output_folder + r'\smear kernel.png')
+        """
 
     if add_nrb:
         for obj in [out1, out2]:

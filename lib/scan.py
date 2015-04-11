@@ -12,14 +12,14 @@ from time import clock, strftime
 #from scipy.interpolate import griddata, interp2d
 
 from scipy.signal import convolve2d
-from NISE.lib.misc import *
-import NISE.lib.evolve as evolve
-import NISE.lib.pulse as pulse
+from .misc import *
+from . import evolve as evolve
+from . import pulse as pulse
 #import NISE.hamiltonians.params.inhom as inhom
 #import NISE.hamiltonians.H0 as H0
 
-reload(evolve)
-reload(pulse)
+#reload(evolve)
+#reload(pulse)
 #reload(inhom)
 #reload(H0)
 
@@ -35,7 +35,8 @@ class Axis:
     """
     points = np.array([])
     default_units = None
-    def __init__(self, pulse_ind, pulse_var, also=None, pulse_class_name='Gauss_rwa', 
+    def __init__(self, pulse_ind, pulse_var, also=None, 
+                 pulse_class_name='Gauss_rwa', 
                  name=None, units=None):
         self.pulse_ind = pulse_ind
         self.pulse_class_name = pulse_class_name
@@ -154,15 +155,16 @@ class Experiment:
 
 class Scan:
     """
-    Things to be specified by the experiment:
-        hamiltonian, inhomogeneity objects
-        scan axes
+    Things to be specified with each scan:
+        -hamiltonian
+        -inhomogeneity/correlations
+        -scan axes
     things to inherit from the experiment
-        timestep, buffers
-        the pulses module used
-        number of pulses
-        conjugate pulses
-        pulse "positions"
+        -timestep, buffers
+        -the pulses module used
+        -number of pulses
+        -conjugate pulses/phase matching
+        -pulse "positions"
     """
     # a boolean that indicates whether the scan is run or not
     is_run = False
@@ -263,7 +265,9 @@ class Scan:
         # listed
         # if this is already run, we don't have to do it again
         # optional to window certain indices
-        try: # prevent from re-running, as this is subject to errors if run again
+        try: 
+            # prevent from re-running, as this is subject to errors if run 
+            # again.  For some reason running this twice alters the params
             self.efp
             print 'stopped a recall of get_efield_params'
             return self.efp.copy()
@@ -444,10 +448,11 @@ class Scan:
         return wm
 
     def smear(self, ax, ay, fwhm_maj, fwhm_min, theta=np.pi/4., 
-              center=None):
+              center=None, save=True):
         """
         Perform a convolution of the data along scan axes using a 2-dimensional 
-        elliptical gaussian.  
+        elliptical gaussian.  Return a new scan object that is a copy of the 
+        original but with the smeared sig array.
 
         ax,ay:  
             indices that specifies the two axes involved in the 
@@ -462,6 +467,12 @@ class Scan:
             defines the angle of the major axis with respect to the first 
             axis.  This will be the angle required for transforming ax (ay) 
             into the major (minor) axis.
+        center:  
+            specify the center of this function--not especially useful; 
+            will default to the average of the axis values
+        save_obj:
+            if True, will save the new object and record the smearing kernel
+            applied
         """
         if not self.is_run:
             print 'no data to perform convolution on!'
@@ -470,11 +481,9 @@ class Scan:
         x = self.axis_objs[ax].points.copy()
         y = self.axis_objs[ay].points.copy()
         if center is None:
-            x -= x.sum() / x.size
-            y -= y.sum() / y.size
-        else:
-            x -= center[0]
-            y -= center[1]
+            center = [x.sum() / x.size, y.sum()/y.size]
+        x -= center[0]
+        y -= center[1]
         s_maj = fwhm_maj / 2*np.sqrt(2*np.log(2))
         s_min = fwhm_min / 2*np.sqrt(2*np.log(2))
         # u is the major axis, y is the minor axis
@@ -528,8 +537,35 @@ class Scan:
         #print invert_transpose
         out = out.transpose(*invert_transpose)
         # undo phase adjustment
-        out *= np.exp(-1j*wm[...,None,None] * (tprime-self.early_buffer))
-        return out
+        # to minimize memory, loop through this explicitly
+        for ind in np.ndindex(self.sig.shape[:-2]):
+            out[ind] *= np.exp(-1j*wm[ind] * (tprime-self.early_buffer))
+        self.sig = out
+        if save==True:
+            self.save(name='smeared')
+            # also record the kernel
+            kernel = {
+                'angle (deg)' : theta *180. / np.pi,
+                'fwhm_maj'    : fwhm_maj,
+                'fwhm_min'    : fwhm_min,
+                'center'      : center
+            }
+            p_name = r'kernel.csv'
+            p_full_name = '\\'.join([self.output_folder, p_name])
+            with open(p_full_name,'wb') as params:
+                writer = csv.writer(params)
+                writer.writerow(['----- kernel params -----'])
+                for key, value in kernel.iteritems():
+                    writer.writerow([key, value])
+            import NISE.lib.fscolors_beta as f
+            import matplotlib.pyplot as plt
+            plt.contourf(x, y, kk, 200, cmap=f.plot_artist.mycm)
+            plt.colorbar()
+            plt.savefig(self.output_folder + r'\smear kernel.png')
+        # reload the original sig now
+        self.sig = tempsig
+        print 'smearing complete!'
+        return 
 
     def efields(self):
         # compute non-res 'forced' signal component 
@@ -567,17 +603,28 @@ class Scan:
         else:
             print 'cannot plot data, scan obejct {0} has not been run yet'
 
-    def save(self, foldername=None, filename=None, method='pickle'):
+    def save(self, name=None, full_name=None, method='pickle'):
         """
         saves the scan instance
+        name:
+            name will appended to the timestamp
+        full_name:
+            saved folder will be named full_name with no timestamp
         """
         #-----------step 1:  create output_folder-----------
         # create a directory for all the data files
-        if foldername is None:
-            foldername = strftime("%Y.%m.%d %H-%M-%S")
-        self.foldername = foldername
-        # create folder for output files 
-        output_folder = r'\\'.join([default_path, foldername])
+        foldertime = strftime("%Y.%m.%d %H-%M-%S")
+        if full_name is None:
+            # even if already saved, rewrite foldername property to the most recent
+            # save
+            if name is None:
+                self.foldername = foldertime
+            else:
+                self.foldername = ' - '.join([foldertime, name])
+            # create folder for output files 
+            output_folder = r'\\'.join([default_path, self.foldername])
+        else:
+            output_folder = full_name
         # save the output folder for pointing in other exports
         self.output_folder = output_folder
         os.makedirs(output_folder)
@@ -668,6 +715,7 @@ class Scan:
                         value = getattr(obji.__class__, key)
                     writer.writerow([key, value])
         print 'save complete:  output directory is {0}'.format(output_folder)
+        return output_folder
     
     @classmethod
     def _import(cls, foldername):

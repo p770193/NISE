@@ -5,8 +5,8 @@ Created on Fri Jul 11 12:17:46 2014
 @author: Dan
 """
 
-from NISE.lib.misc import *
-import NISE.lib.pulse as pulse
+from .misc import *
+from .pulse import pulse as pulse
 
 class Axis:
     """

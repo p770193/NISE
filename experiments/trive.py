@@ -14,8 +14,10 @@ so:  free vars to consider:
     
 """
 
-from NISE.lib.misc import *
-import NISE.lib.scan as S
+from .. import lib
+from ..lib.misc import *
+from ..lib import scan as S
+
 #import matplotlib.pyplot as plt
 #from NISE.lib.axis import Axis
 

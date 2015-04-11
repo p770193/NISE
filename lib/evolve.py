@@ -5,7 +5,7 @@ Using Domcke approach to numerically integrate TRIVE signal of diagonal and
 near-diagonal features
 """
 
-from NISE.lib.misc import *
+from .misc import *
 
 def rk_1():
     # a function to use for working with raman signals, it does not integrate 

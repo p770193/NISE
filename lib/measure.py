@@ -3,9 +3,8 @@
     hamiltonians can collect here
 """
 
-from NISE.lib.misc import *
-import NISE.lib.fscolors_beta as fscolors_beta
-reload(fscolors_beta)
+from .misc import *
+from . import fscolors_beta as fscolors_beta
 import matplotlib.pyplot as plt
 from time import strftime
 
