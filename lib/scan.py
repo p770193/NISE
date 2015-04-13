@@ -557,13 +557,13 @@ class Scan:
                 writer.writerow(['----- kernel params -----'])
                 for key, value in kernel.iteritems():
                     writer.writerow([key, value])
-            import NISE.lib.fscolors_beta as f
+            from . import fscolors_beta as f
             import matplotlib.pyplot as plt
+            plt.figure()
             plt.contourf(x, y, kk, 200, cmap=f.plot_artist.mycm)
             plt.colorbar()
             plt.savefig(self.output_folder + r'\smear kernel.png')
-        # reload the original sig now
-        self.sig = tempsig
+            plt.close()
         print 'smearing complete!'
         return 
 
@@ -578,9 +578,9 @@ class Scan:
             efields = np.zeros((efields_shape), dtype=np.complex)
             pulse_class= pulse.__dict__[self.pulse_class_name]
             with Timer():
-                for indices in np.ndindex(tuple(efields_shape[:-2])):
-                    t, ef = pulse_class.pulse(efp[indices], pm=self.pm)
-                    efields[indices] = ef[:,-self.iprime:]
+                for ind in np.ndindex(tuple(efields_shape[:-2])):
+                    t, ef = pulse_class.pulse(efp[ind], pm=self.pm)
+                    efields[ind] = ef[:,-self.iprime:]
             return efields
         else:
             print 'cannot plot data, scan object has not been run yet'

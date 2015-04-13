@@ -127,7 +127,7 @@ class Measure:
         # use temp_pol and order is [...,yaxis, xaxis]        
         # all that's left is figuring out how many plots there are!
         iterator_shape = temp_pol.shape[:-len(var_list)]
-        print transpose_order
+        #print transpose_order
         index_map=[]
         # we will make an exception if iterator_shape is empty--this can happen
         # if plot_dim is equal or greater to dim
@@ -279,7 +279,7 @@ class Mono:
     # aliasing issue:  data is under-aliased, so translating frequency 
     # by a non-gridded value can introduce aliasing errors
     # problem can be minimized by adding trailing zeroes, effectively 
-    # interpolating the data set
+    # interpolating the fft data set
     alias_factor = 2
 
     @classmethod
@@ -388,3 +388,55 @@ class SLD:
             print 'cannot discern whether integration space is time or frequency'
             return False
 
+
+class Heterodyne:
+    """
+    measurement through interference
+    """
+    ratio = 100. # ratio of lo amplitude to max sig amp
+    pulse = 0 # index of the pulse used for the heterodyne
+    in_space = 't'
+    out_space = 't'
+    chop = False
+
+    @classmethod
+    def run(cls, scan_obj, sig):
+        lo = scan_obj.efields()
+        lo_max = np.abs(lo).max()
+        sig_max = np.abs(sig).sum(axis=-2).max()
+        lo *= sig_max / lo_max * cls.ratio
+        if sig.shape[-1] == lo.shape[-1]:
+            if cls.chop:
+                # easy, just call the beam and look at the result
+                sig *= 0.
+                # both phases have the ability to interfere, so include them 
+                # both
+                sig += lo.real[...,cls.pulse,None,:]
+                #sig += lo.conj()[...,cls.pulse,None,:]
+                #sig = lo[...,cls.pulse, :]
+            else: # block the output so baseline can be established
+                # collapse along out_groups--do this to make lo predictable 
+                # regardless of outgroups size
+                sig += lo.real[...,cls.pulse,None,:]
+        else:
+            print 'sig shape does not match lo shape; aborting heterodyne'
+            return sig
+        #print sig.shape
+        return sig
+
+    @classmethod
+    def check_space(cls, space):
+        """
+        method for checking if space can agree with calculations
+        """
+        # spacing is determined by 
+        if space == 't': # lets only worry about time for now
+            return True
+        elif space == 'f':
+            print 'heterodyne only supports time-interference at this time'
+            return False
+        else:
+            # cannot compute absolute signal without knowing the space we are in
+            print 'cannot discern whether space is time or frequency'
+            return False
+        pass
