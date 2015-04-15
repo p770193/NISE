@@ -61,7 +61,8 @@ class Axis:
         self._set_coords()
         
     def _set_coords(self):
-        # report the coords of efield params that will be influenced by this this scan_var
+        # report the coords of efield params that will be influenced by this 
+        # scan_var
         ind0 = self.also
         ind0.append(self.pulse_ind)
         ind1 = self.cols[self.pulse_var]
@@ -94,6 +95,7 @@ class Experiment:
         # if we want to change these bounds, what is the best way to do it?
         pulse_class = pulse.__dict__[pulse_class_name]
         # write time properties to the pulse class
+        # do this now, or at the time of writing?
         pulse_class.timestep = self.__class__.timestep
         pulse_class.early_buffer = self.__class__.early_buffer
         pulse_class.late_buffer = self.__class__.late_buffer
@@ -567,23 +569,42 @@ class Scan:
         print 'smearing complete!'
         return 
 
-    def efields(self):
-        # compute non-res 'forced' signal component 
-        if self.is_run:
-            #[axes..., numpulses, args]
-            efp = self.get_efield_params()
-            # [axes..., numpulses, pulse field values]
-            efields_shape = list(efp.shape)
+    def efields(self, windowed=True):
+        """
+        return the e-fields used in the simulation
+        if windowed == True, only returns values that are within the early 
+        and late buffer
+        """
+        # [axes..., numpulses, nparams]
+        efp = self.get_efield_params()
+        # [axes..., numpulses, pulse field values]
+        efields_shape = list(efp.shape)
+        pulse_class= pulse.__dict__[self.pulse_class_name]
+        if windowed:
             efields_shape[-1] = self.iprime
             efields = np.zeros((efields_shape), dtype=np.complex)
-            pulse_class= pulse.__dict__[self.pulse_class_name]
             with Timer():
                 for ind in np.ndindex(tuple(efields_shape[:-2])):
-                    t, ef = pulse_class.pulse(efp[ind], pm=self.pm)
-                    efields[ind] = ef[:,-self.iprime:]
-            return efields
-        else:
-            print 'cannot plot data, scan object has not been run yet'
+                    ti, efi = pulse_class.pulse(efp[ind], pm=self.pm)
+                    efields[ind] = efi[:,-self.iprime:]
+        else: 
+            # figure out the biggest array size we will get
+            d_ind = pulse_class.cols['d']
+            t = pulse_class.get_t(efp[...,d_ind])
+            efields_shape[-1] = t.size
+            efields = np.zeros((efields_shape), dtype=np.complex)
+            pulse_class.fixed_bounds_min = t.min()
+            pulse_class.fixed_bounds_max = t.max()
+            pulse_class.fixed_bounds = True
+            try:
+                with Timer():
+                    for ind in np.ndindex(tuple(efields_shape[:-2])):
+                        ti, efi = pulse_class.pulse(efp[ind], pm=self.pm)
+                        efields[ind] = efi
+            finally:
+                # set the class back to what it was before exiting
+                pulse_class.fixed_bounds = False
+        return efields
                     
     def nrb(self):
         # compute non-res 'forced' signal component 

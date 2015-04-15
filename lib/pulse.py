@@ -1,9 +1,44 @@
+"""
+Pulse module:  for defining pulse classes to be used in simulations
+Rules for creating a pulse class method:
+
+1.  "pulse" method:  
+    accepts:
+        eparams
+        pm
+    returns:    
+        t
+        x                
+2.  "get_t" method:  should be inherited
+    accepts:
+        d
+    returns:
+        t
+"""
+
+
 from .misc import *
 
 # factor used to convert FWHM to stdev for function definition
 # gaussian defined such that FWHM,intensity scale = sigma * 2 * sqrt(ln(2))
 # (i.e. FWHM, intensity scale ~ 1.67 * sigma, amplitude scale)
 FWHM_to_sigma = 1./(2*np.sqrt(np.log(2)))
+
+def _get_t(obj, d):
+    """
+        returns the t array that is appropriate for the given pulse 
+        parameters; needs the appropriate buffers/timestep as well 
+    """
+    if obj.fixed_bounds:
+        t_min = obj.fixed_bounds_min
+        t_max = obj.fixed_bounds_max
+    else:
+        t_min = d.min() - obj.early_buffer
+        t_max = d.max() + obj.late_buffer
+    # span up to and including t_max now
+    t = np.arange(t_min, t_max+obj.timestep, obj.timestep)
+    return t
+
 
 class Gauss_rwa:
     """
@@ -33,7 +68,11 @@ class Gauss_rwa:
     timestep = timestep
     early_buffer = early_buffer
     late_buffer = late_buffer
-    
+    # fixed bounds set to true if you want fixed time indices for the pulses
+    fixed_bounds = False
+    fixed_bounds_min = None
+    fixed_bounds_max = None
+        
     @classmethod
     def pulse(cls, eparams, pm=None):
         """
@@ -54,7 +93,6 @@ class Gauss_rwa:
         offset = mu[0]
         # subtract off the value
         mu -= offset
-    
         # normalize amplitdue to stdev
         y = area / (sigma*np.sqrt(2*np.pi))
         #print y, sigma, mu, freq, p
@@ -71,20 +109,6 @@ class Gauss_rwa:
     
     @classmethod
     def get_t(cls, d):
-        """
-            returns the t array that is appropriate for the given pulse 
-            parameters; needs the appropriate buffers/timestep as well 
-        """
-        t_min = min(d) - cls.early_buffer
-        t_max = max(d) + cls.late_buffer
-        t = np.arange(t_min, t_max, cls.timestep)
-        return t
+        return _get_t(cls,d)
+
     
-    @classmethod
-    def export(cls):
-        pass
-
-    @classmethod
-    def import_(cls):
-        pass
-

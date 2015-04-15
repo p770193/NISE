@@ -59,6 +59,8 @@ class Measure:
     def run(self, save=True):
         # store polarization of each step as a variable
         self.pol = self.scan_obj.sig.copy()
+        # convert the polarization into emitted field via a phase shift
+        self.pol *= 1j
         # loop through the manipulations
         for step in self.instruction_classes:
             # make sure operation is valid the space the signal is expressed in
@@ -284,7 +286,14 @@ class Mono:
 
     @classmethod
     def run(cls, scan_obj, sig):
-        tprime = np.arange(sig.shape[-1]) * scan_obj.timestep - scan_obj.early_buffer
+        tprime = np.arange(sig.shape[-1]) * scan_obj.timestep 
+        if sig.shape[-1] == scan_obj.iprime:
+            # why do I do this again?  I phase all signals to the arrival of
+            # the last pulse, but why?
+            #tprime -= scan_obj.early_buffer
+            pass
+        else: # sig has been stretched and put into absolute coordinates
+            pass
         #fft_tprime = np.fft.fftfreq(sig.shape[-1], d=scan_obj.timestep)
         #tprime = np.fft.fftshift(np.fft.fftfreq(sig.shape[-1], d=np.abs(fft_tprime[1]-fft_tprime[0])))
         # apply rw to orient polarization to driven frame (where we 
@@ -388,36 +397,47 @@ class SLD:
             print 'cannot discern whether integration space is time or frequency'
             return False
 
-
-class Heterodyne:
+class Scatter:
     """
-    measurement through interference
+    add e-fields to the output coherences
     """
     ratio = 100. # ratio of lo amplitude to max sig amp
-    pulse = 0 # index of the pulse used for the heterodyne
+    # either list of coefficients--one scalar for each pulse--or a 
+    # int
+    pulse = 0 
     in_space = 't'
     out_space = 't'
     chop = False
+    #windowed = False
 
     @classmethod
     def run(cls, scan_obj, sig):
-        lo = scan_obj.efields()
-        lo_max = np.abs(lo).max()
+        #--------part 1:  retrieve efields--------#
+        # adding conjugate to lo will result in a real field
+        lo = scan_obj.efields().real
+        #if not cls.windowed:
+        #    lo = scan_obj.efields().real
+        #else:
+        #    # lo is not of length iprime anymore (necessarily)
+        #    lo = scan_obj.efields(windowed=False).real
+        #    # how to phase this with signal???
+        #--------part 2:  scale efield amplitudes and add together--------#
+        lo_max = lo.max()
         sig_max = np.abs(sig).sum(axis=-2).max()
+        try: # first assume pulse is a list-like type
+            for i in range(len(cls.pulse)): 
+                lo[...,i,:] *= cls.pulse[i]
+            lo = lo.sum(axis=-2)
+        except TypeError: lo = lo[...,cls.pulse,:]
         lo *= sig_max / lo_max * cls.ratio
+        #--------part 3:  add lo to output signal--------#
         if sig.shape[-1] == lo.shape[-1]:
-            if cls.chop:
-                # easy, just call the beam and look at the result
+            if cls.chop: # block the output so baseline can be established
+                # write with reference to original sig array so size of 
+                # outgroups axis is maintained, even though lo doesn't have 
+                # this axis
                 sig *= 0.
-                # both phases have the ability to interfere, so include them 
-                # both
-                sig += lo.real[...,cls.pulse,None,:]
-                #sig += lo.conj()[...,cls.pulse,None,:]
-                #sig = lo[...,cls.pulse, :]
-            else: # block the output so baseline can be established
-                # collapse along out_groups--do this to make lo predictable 
-                # regardless of outgroups size
-                sig += lo.real[...,cls.pulse,None,:]
+            sig += lo[...,None,:]
         else:
             print 'sig shape does not match lo shape; aborting heterodyne'
             return sig
@@ -440,3 +460,49 @@ class Heterodyne:
             print 'cannot discern whether space is time or frequency'
             return False
         pass
+
+class LO:
+    """
+    temporal interferrogram of signal with an electric field
+    """
+    ratio = 100. # ratio of lo amplitude to max sig amp
+    pulse = 0 # index of the pulse used for the heterodyne
+    in_space = 't'
+    out_space = 't'
+    chop = False    
+    
+    @classmethod
+    def run(cls, scan_obj, sig):
+        # adding conjugate to lo will result in a real field
+        lo = scan_obj.efields().real()
+        lo_max = lo.max()
+        sig_max = np.abs(sig).sum(axis=-2).max()
+        lo *= sig_max / lo_max * cls.ratio
+        from scipy import convolve
+        if sig.shape[-1] == lo.shape[-1]:
+            if cls.chop: # block the output so baseline can be established
+                # write with reference to original sig array so size of 
+                # outgroups axis is maintained, even though lo doesn't have 
+                # this axis
+                sig *= 0.
+            sig += lo[...,cls.pulse,None,:]
+    
+    @classmethod
+    def check_space(cls, space):
+        """
+        method for checking if space can agree with calculations
+        """
+        # spacing is determined by 
+        if space == 't': # lets only worry about time for now
+            return True
+        elif space == 'f':
+            print 'heterodyne only supports time-interference at this time'
+            return False
+        else:
+            # cannot compute absolute signal without knowing the space we are in
+            print 'cannot discern whether space is time or frequency'
+            return False
+        pass
+
+# don't include this yet
+del LO
