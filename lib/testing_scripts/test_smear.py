@@ -20,25 +20,29 @@ if __name__ == '__main__':
     reload(m)
     
     autosave  = True
-    imported_before = False
+    imported_before = True
     imported_after  = False
+    phase_index = 0
     add_nrb   = False
     use_inhom = False
-    plot      = True
+    plot1      = False
+    plot2      = True
     mp        = True
     gh_quad   = False
     view_kernel = True
     make_movie = False
-    folder_path = NISE_path
-    TOs       = [1,2,3,4,5,6]
+    #folder_path = NISE_path
+    folder_path = 'C:\Users\Dan\Documents\NISE\on diagonal pathways v2'
+    TOs       = [6]#[1,2,3,4,5,6]
     nrb_level = 0.5 # amplitude, relative to sig max
     smear_extent = 1000. # inohomogeneous broadening fwhm, in wn
-    slitwidth = None#120.0 # width in wavenumbers; set to none if no slit
+    slitwidth = 120.0 # width in wavenumbers; set to none if no slit
     # takes ~ 50 pts per second (with no inhomogeneity)
     angle = np.pi / 4.
-    rel_path1 = r'\data\2015.04.09 22-48-13'
+    rel_path1 = r'\2015.04.10 01-54-09 - to6'
+    #rel_path1 = r'\2015.04.10 01-54-09 - to6'
     #rel_path2 = r'\data\2015.04.07 20-55-42 - correlated'
-    rel_path2 = r'\data\2015.04.09 16-03-37'
+    rel_path2 = r'\data\2015.04.24 01-45-40 - smeared'
     if imported_before:
         filepath = r''.join([folder_path, rel_path1])
         out1 = trive.S.Scan._import(filepath)
@@ -55,10 +59,10 @@ if __name__ == '__main__':
         ws = trive.ws
         d2 = trive.d2
         d1 = trive.d1
-        w1.points = np.linspace(5000, 9000, num=61)
-        w2.points = np.linspace(5000, 9000, num=61)
+        w1.points = np.linspace(5000, 9000, num=121)
+        w2.points = np.linspace(5000, 9000, num=121)
         #trive.ws.points = np.linspace(6000, 8800, num=21)
-        d2.points = np.linspace(-100, 100, num=11)
+        d2.points = np.linspace(-100, 0, num=2)
         #d1.points = np.linspace(-125, 125, num=15)
         trive.exp.timestep = 2.0
         if use_inhom:
@@ -81,11 +85,18 @@ if __name__ == '__main__':
             out1.run(autosave=autosave, mp=True, chunk=False)
         else:
             out1.run(autosave=autosave, mp=False)
+    sig1 = m.Measure(out1, m.Mono, m.SLD)
+    m.Mono.slitwidth=slitwidth
+    if plot1:
+        sig1.run()
+        sig1.plot(0,yaxis=1, zoom=2)
+        #sig1.plot(0,yaxis=2)
     if imported_after:
         filepath = r''.join([NISE_path, rel_path2])
         out2 = trive.S.Scan._import(filepath)
     else:
-        out2 = out1.smear(0,1,smear_extent,20,theta=angle)
+        out1.smear(0,1,smear_extent,20,theta=angle)
+        out2 = out1
     if view_kernel:
         pass
         """
@@ -155,16 +166,10 @@ if __name__ == '__main__':
                 plt.close()
                 print i
 
-    sig1 = m.Measure(out1, m.Mono, m.SLD)
     sig2 = m.Measure(out2, m.Mono, m.SLD)
     # should be equivalent to the others if we set mono to pass
-    m.Mono.slitwidth=slitwidth
-    if plot:
-        sig1.run()
+    if plot2:
         sig2.run()
-        #print sig2.pol.shape
         # run out1.axes() if you forgot which axis is which
-        sig1.plot(0,yaxis=1, zoom=2)
         sig2.plot(0,yaxis=1, zoom=2)
-        #sig1.plot(0,yaxis=2, zoom=2)
-        #sig1.plot(1,yaxis=2)
+        #sig2.plot(0,yaxis=2)

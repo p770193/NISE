@@ -11,7 +11,6 @@ import cPickle as pickle
 from time import clock, strftime
 #from scipy.interpolate import griddata, interp2d
 
-from scipy.signal import convolve2d
 from .misc import *
 from . import evolve as evolve
 from . import pulse as pulse
@@ -469,12 +468,15 @@ class Scan:
             defines the angle of the major axis with respect to the first 
             axis.  This will be the angle required for transforming ax (ay) 
             into the major (minor) axis.
-        center:  
+        center:  float
             specify the center of this function--not especially useful; 
             will default to the average of the axis values
-        save_obj:
+        save_obj: boolean
             if True, will save the new object and record the smearing kernel
             applied
+        phase: boolean
+            if true, locks the phase for smearing.  Otherwise smears data 
+            without any phase changes
         """
         if not self.is_run:
             print 'no data to perform convolution on!'
@@ -500,11 +502,17 @@ class Scan:
         # in grid spacings as well (du, dv), but we'll forego this
         # we've created the kernel, let's convolve now
         out = self.sig.copy()
-        # we need to phase the kernel based on delay
         wm = self.get_color() * wn_to_omega
-        tprime = np.arange(self.sig.shape[-1]) * self.timestep
-        out *= np.exp(1j*wm[...,None,None] * (tprime-self.early_buffer))
-        
+        tprime = np.arange(self.sig.shape[-1]) * self.timestep -self.early_buffer
+        pulse_class= pulse.__dict__[self.pulse_class_name]
+        d_ind = pulse_class.cols['d']
+        w_ind = pulse_class.cols['w']
+        for ind in np.ndindex(self.sig.shape[:-2]):
+            # bring frames to their own local frequencies (all at wm)
+            last_pulse = self.efp[ind][:,d_ind].max()
+            ws = self.efp[ind][:,w_ind] * wn_to_omega
+            p0 = np.dot(self.pm, ws * self.efp[ind][:, d_ind])
+            out[ind] *= np.exp(1j * (wm[ind] * (tprime + last_pulse) - p0))
         transpose_order = list(range(len(self.sig.shape)))
         transpose_order.pop(max(ax,ay))
         transpose_order.pop(min(ax,ay))
@@ -527,11 +535,6 @@ class Scan:
         for i in range(len(results)):
             out[results[i][0]] = results[i][1]
         del results
-        #####
-        """
-        for ind in np.ndindex(self.sig.shape[:-2]):
-            out[ind] = convolve2d(out[ind], kk, mode='same', fillvalue=0.0)
-        """
         # return array to it's original order
         invert_transpose = [j for i in range(len(self.sig.shape)) 
                               for j in range(len(self.sig.shape)) 
@@ -541,7 +544,19 @@ class Scan:
         # undo phase adjustment
         # to minimize memory, loop through this explicitly
         for ind in np.ndindex(self.sig.shape[:-2]):
-            out[ind] *= np.exp(-1j*wm[ind] * (tprime-self.early_buffer))
+            last_pulse = self.efp[ind][:,d_ind].max()
+            ws = self.efp[ind][:,w_ind] * wn_to_omega
+            p0 = np.dot(self.pm, ws * self.efp[ind][:, d_ind])
+            """
+            # bring frames to their own local frequencies (all at wm)
+            if phase_index is None:
+                d0 = 0.
+            else:
+                last_pulse = self.efp[ind][:,d_ind].max()                    
+                d0 = self.efp[ind][phase_index,d_ind] - last_pulse
+            """
+            #out[ind] *= np.exp(-1j*wm[ind] * (tprime-d0))
+            out[ind] *= np.exp(-1j * (wm[ind] * (tprime + last_pulse) - p0))
         self.sig = out
         if save==True:
             self.save(name='smeared')
@@ -550,7 +565,8 @@ class Scan:
                 'angle (deg)' : theta *180. / np.pi,
                 'fwhm_maj'    : fwhm_maj,
                 'fwhm_min'    : fwhm_min,
-                'center'      : center
+                'center'      : center,
+                #'phase_index' : phase_index
             }
             p_name = r'kernel.csv'
             p_full_name = '\\'.join([self.output_folder, p_name])
@@ -563,6 +579,7 @@ class Scan:
             import matplotlib.pyplot as plt
             plt.figure()
             plt.contourf(x, y, kk, 200, cmap=f.plot_artist.mycm)
+            plt.grid()
             plt.colorbar()
             plt.savefig(self.output_folder + r'\smear kernel.png')
             plt.close()
@@ -1079,6 +1096,8 @@ def _obj_classfile_copy(obj, destination):
     del _copy
     return class_file
 
+from scipy.signal import convolve2d
+
 def do_convolution(arglist):
     indices, signal, kk = arglist
     out = convolve2d(signal, kk, mode='same', fillvalue=0.0)
@@ -1092,6 +1111,7 @@ def do_work(arglist):
     pulse_class.late_buffer = lb
     pulse_class.timestep = timestep
     t, efields = pulse_class.pulse(efpi, pm=pm)
+    print t.min(), t.max()
     out = evolve_func(t, efields, iprime, inhom_object, H)
     if indices[-1] == 0:
         #print str(inhom_object.zeta_bound) + str(len(inhom_object.zeta)) + '\r',

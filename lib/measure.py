@@ -24,7 +24,7 @@ class Measure:
     # all the axes encountered in the Measure().pol array
     axis_objs = None
     
-    plot_lim = 31.
+    plot_lim = 100.
     # initialization should specify the measurement instructions
     def __init__(self, scan_obj, *instruction_classes, **kwargs):
         if not scan_obj.is_run:
@@ -312,7 +312,7 @@ class Mono:
                                     d=scan_obj.timestep)
         for ind in np.ndindex(sig.shape[:-2]):
             wmi = wm[ind]
-            outi = sig[ind] * rotor(-wmi * tprime)
+            outi = sig[ind] * np.exp(1j*wmi * tprime)
             outi = np.concatenate([outi, trailing_zeroes], axis=-1)
             outi = np.fft.fft(outi, axis=-1)
             outi = np.fft.fftshift(outi, axes=-1)

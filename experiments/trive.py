@@ -23,8 +23,8 @@ from ..lib import scan as S
 
 reload(S)
 
-w1 = S.Axis(0, 'w', name=r'$\mathsf{\omega_1}$')
-w2 = S.Axis(1, 'w', also=[2], name=r'$\mathsf{\omega_2 = \omega_{2^\prime}}$')
+w1 = S.Axis(0, 'w', name=r'$\mathsf{\bar\nu_1}$')
+w2 = S.Axis(1, 'w', also=[2], name=r'$\mathsf{\bar\nu_2 = \bar\nu_{2^\prime}}$')
 # write d2 in new delay coordinate system--all relative to w2
 d1 = S.Axis(2, 'd', name=r'$\mathsf{\tau_{2^\prime 2}}$')
 d2 = S.Axis(0, 'd', name=r'$\mathsf{\tau_{12}}$')

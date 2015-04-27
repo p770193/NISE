@@ -88,7 +88,7 @@ def rk(t, efields, iprime, inhom_object, omega_object):
                 for oi in range(len(out_group)):
                     freqs = w_l[np.ix_(out_group[oi])]
                     perm_list = np.arange(H.shape[0])
-                    # sum over permutations and add rotating wave
+                    # sum over permutations and put back in lab-time frame
                     new_emitted = rho_i[np.ix_(perm_list,out_group[oi])].sum(axis=0) * rotor(freqs*tk)
                     # f(t+dt) = f(x) + df/dt * dt
                     # add all elements within the out_group element oi together
