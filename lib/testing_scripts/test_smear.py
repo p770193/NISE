@@ -21,8 +21,7 @@ if __name__ == '__main__':
     
     autosave  = True
     imported_before = True
-    imported_after  = False
-    phase_index = 0
+    imported_after  = True
     add_nrb   = False
     use_inhom = False
     plot1      = False
@@ -36,13 +35,13 @@ if __name__ == '__main__':
     TOs       = [6]#[1,2,3,4,5,6]
     nrb_level = 0.5 # amplitude, relative to sig max
     smear_extent = 1000. # inohomogeneous broadening fwhm, in wn
-    slitwidth = 120.0 # width in wavenumbers; set to none if no slit
+    slitwidth = None #120.0 # width in wavenumbers; set to none if no slit
     # takes ~ 50 pts per second (with no inhomogeneity)
     angle = np.pi / 4.
-    rel_path1 = r'\2015.04.10 01-54-09 - to6'
+    rel_path1 = r'\2015.04.10 00-03-10 - to1'
     #rel_path1 = r'\2015.04.10 01-54-09 - to6'
     #rel_path2 = r'\data\2015.04.07 20-55-42 - correlated'
-    rel_path2 = r'\data\2015.04.24 01-45-40 - smeared'
+    rel_path2 = r'\2015.04.25 17-32-56 - TO1 smeared - phased to w1'
     if imported_before:
         filepath = r''.join([folder_path, rel_path1])
         out1 = trive.S.Scan._import(filepath)
@@ -92,7 +91,7 @@ if __name__ == '__main__':
         sig1.plot(0,yaxis=1, zoom=2)
         #sig1.plot(0,yaxis=2)
     if imported_after:
-        filepath = r''.join([NISE_path, rel_path2])
+        filepath = r''.join([folder_path, rel_path2])
         out2 = trive.S.Scan._import(filepath)
     else:
         out1.smear(0,1,smear_extent,20,theta=angle)
