@@ -1111,7 +1111,6 @@ def do_work(arglist):
     pulse_class.late_buffer = lb
     pulse_class.timestep = timestep
     t, efields = pulse_class.pulse(efpi, pm=pm)
-    print t.min(), t.max()
     out = evolve_func(t, efields, iprime, inhom_object, H)
     if indices[-1] == 0:
         #print str(inhom_object.zeta_bound) + str(len(inhom_object.zeta)) + '\r',

@@ -25,19 +25,26 @@ pulse_class_name = 'Gauss_rwa'
 def assert_pulse_class(pulse_class_name):
     global w1 
     w1 = S.Axis(0, 'w', name=r'$\mathsf{\bar\nu_1}$', 
+                units = 'wn',
                 pulse_class_name = pulse_class_name)
     global w2 
-    w2 = S.Axis(1, 'w', also=[2], name=r'$\mathsf{\bar\nu_2 = \bar\nu_{2^\prime}}$',
+    w2 = S.Axis(1, 'w', also=[2], 
+                name=r'$\mathsf{\bar\nu_2 = \bar\nu_{2^\prime}}$',
+                units = 'wn',
                 pulse_class_name = pulse_class_name)
     # write d2 in new delay coordinate system--all relative to w2
     global d1
     d1 = S.Axis(2, 'd', name=r'$\mathsf{\tau_{2^\prime 2}}$',
+                units = 'fs',
                 pulse_class_name = pulse_class_name)
     global d2
     d2 = S.Axis(0, 'd', name=r'$\mathsf{\tau_{12}}$',
+                units = 'fs',
                 pulse_class_name = pulse_class_name)
     global ws
-    ws = S.Axis(0, 'w', also=[1,2], name=r'$\mathsf{\omega_1 = \omega_2 = \omega_{2^\prime}}$',
+    ws = S.Axis(0, 'w', also=[1,2], 
+                name=r'$\mathsf{\omega_1 = \omega_2 = \omega_{2^\prime}}$',
+                units = 'wn',
                 pulse_class_name = pulse_class_name)
     global A1 
     A1 = S.Axis(0, 'A', name=r'$k_1$ Fluence (a.u.)',
@@ -46,7 +53,8 @@ def assert_pulse_class(pulse_class_name):
     A2 = S.Axis(1, 'A', also=[2], name=r'$k_2, k_{2^\prime}$ Fluence (a.u.)',
                 pulse_class_name = pulse_class_name)
     global As 
-    As = S.Axis(0, 'A', also=[1,2], name=r'$k_1, k_2, k_{2^\prime}$ Fluence (a.u.)',
+    As = S.Axis(0, 'A', also=[1,2], 
+                name=r'$k_1, k_2, k_{2^\prime}$ Fluence (a.u.)',
                 pulse_class_name = pulse_class_name)
     # cycle phases
     global p1 

@@ -90,7 +90,6 @@ class Gauss_chirp_rwa:
         # proper unit conversions
         sigma *= FWHM_to_sigma
         freq *= wn_to_omega
-        #print freq, p2
         # redefine delays s.t. always relative to the first pulse listed
         offset = mu[0]
         # subtract off the value
