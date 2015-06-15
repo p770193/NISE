@@ -21,7 +21,7 @@ if __name__ == '__main__':
     
     autosave  = True
     imported_before = True
-    imported_after  = True
+    imported_after  = False
     add_nrb   = False
     use_inhom = False
     plot1      = False
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     slitwidth = None #120.0 # width in wavenumbers; set to none if no slit
     # takes ~ 50 pts per second (with no inhomogeneity)
     angle = np.pi / 4.
-    rel_path1 = r'\2015.04.10 00-03-10 - to1'
+    rel_path1 = r'\2015.04.10 03-51-42 - all tos'
     #rel_path1 = r'\2015.04.10 01-54-09 - to6'
     #rel_path2 = r'\data\2015.04.07 20-55-42 - correlated'
     rel_path2 = r'\2015.04.25 17-32-56 - TO1 smeared - phased to w1'

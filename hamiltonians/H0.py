@@ -58,7 +58,7 @@ class Omega:
     mu_2aa = 1.0 * mu_ag #HO approx (1.414) vs. uncorr. electron approx. (1.)
     # TOs sets which time-ordered pathways to include (1-6 for TrEE)
     # defaults to include all time-orderings included
-    TOs = np.arange(6)+1 
+    TOs = range(7)[1:] 
     #--------------------------Recorded attributes--------------------------
     out_vars = ['dm_vector', 'out_group', 'rho_0', 'mu_ag', 'mu_2aa', 
                 'tau_ag', 'tau_aa', 'tau_2aa', 'tau_2ag',

@@ -52,14 +52,14 @@ class Omega:
     #--------------------------Oscillator Properties--------------------------
     rho_0 = np.zeros((len(dm_vector)), dtype=np.complex64)
     rho_0[0] = 1.
-    #state central position
+    # state central position
     wa_central = 6500.
     wb_central = 7500.
-    #exciton-exciton coupling
+    # exciton-exciton coupling
     a_coupling = 200.0
     b_coupling = 200.0
     ab_coupling = 250.0
-    #dephasing times, 1/fs
+    # dephasing times, 1/fs
     Gamma_ag  = 1./25
     Gamma_bg  = 1./25
     Gamma_aa  = 0.0 #1./2000.
@@ -153,55 +153,55 @@ class Omega:
         O = np.zeros((len(t), len(wl), len(wl)), dtype=np.complex64)
 
         # from gg1
-        O[:,1,0] =  mu_ag  * first  * rotor(-wag*t)
-        O[:,2,0] =  mu_bg  * first  * rotor(-wbg*t)
-        O[:,3,0] = -mu_ag  * E2     * rotor(wag*t)
-        O[:,4,0] = -mu_bg  * E2     * rotor(wbg*t)
+        O[:,1,0] =  mu_ag  * first  * rotor(-wag*t)     # ag
+        O[:,2,0] =  mu_bg  * first  * rotor(-wbg*t)     # bg
+        O[:,3,0] = -mu_ag  * E2     * rotor(wag*t)      # ga
+        O[:,4,0] = -mu_bg  * E2     * rotor(wbg*t)      # gb
         # from ag1
-        O[:,5,1]  = -mu_ag  * E2     * rotor(wag*t)
-        O[:,7,1]  = -mu_bg  * E2     * rotor(wbg*t)
-        O[:,9,1]  =  mu_ag  * second * rotor(-wag*t)
-        O[:,11,1] =  mu_bg  * second * rotor(-wca*t)
+        O[:,5,1]  = -mu_ag  * E2     * rotor(wag*t)     # aa
+        O[:,7,1]  = -mu_bg  * E2     * rotor(wbg*t)     # ab
+        O[:,9,1]  =  mu_ag  * second * rotor(-w2aa*t)    # 2ag
+        O[:,11,1] =  mu_bg  * second * rotor(-wca*t)    # cg
         # from bg1
-        O[:,6,2]  = -mu_bg  * E2     * rotor(wbg*t)
-        O[:,8,2]  = -mu_ag  * E2     * rotor(wag*t)
-        O[:,10,2] =  mu_bg  * second * rotor(-w2bb*t)
-        O[:,11,2] =  mu_ag  * second * rotor(-wcb*t)
+        O[:,6,2]  = -mu_bg  * E2     * rotor(wbg*t)     # bb
+        O[:,8,2]  = -mu_ag  * E2     * rotor(wag*t)     # ba
+        O[:,10,2] =  mu_bg  * second * rotor(-w2bb*t)   # 2bg
+        O[:,11,2] =  mu_ag  * second * rotor(-wcb*t)    # cg
         # from ga
-        O[:,5,3] =  mu_ag  * first  * rotor(-wag*t)
-        O[:,8,3] =  mu_bg  * first  * rotor(-wbg*t)
+        O[:,5,3] =  mu_ag  * first  * rotor(-wag*t)     # aa
+        O[:,8,3] =  mu_bg  * first  * rotor(-wbg*t)     # ba
         # from gb
-        O[:,6,4] =  mu_bg  * first  * rotor(-wbg*t)
-        O[:,7,4] =  mu_ag  * first  * rotor(-wag*t)
-        # from aa
-        O[:,14,5] =  mu_2aa * second * rotor(-w2aa*t) * mu_2aa
-        O[:,12,5] =  mu_ca  * second * rotor(-wca*t)  * mu_ca
-        O[:,17,5] = -mu_bg  * second * rotor(-wbg*t)  * mu_bg
+        O[:,6,4] =  mu_bg  * first  * rotor(-wbg*t)     # bb
+        O[:,7,4] =  mu_ag  * first  * rotor(-wag*t)     # ab
+        # from aa (-gg)
+        O[:,14,5] =  mu_2aa * second * rotor(-w2aa*t) * mu_2aa      # 2aa
+        O[:,12,5] =  mu_ca  * second * rotor(-wca*t)  * mu_ca       # ca
+        O[:,17,5] = -mu_bg  * second * rotor(-wbg*t)  * mu_bg       # gg -> bg
         #   twice the weight because of gamma and alpha pathways
-        O[:,16,5] = -mu_ag  * second * rotor(-wag*t)  * mu_ag * 2
-        # from bb
-        O[:,15,6] =  mu_2bb * second * rotor(-w2bb*t) * mu_2bb
-        O[:,13,6] =  mu_cb  * second * rotor(-wcb*t)  * mu_cb
-        O[:,16,6] = -mu_ag  * second * rotor(-wag*t)  * mu_ag
+        O[:,16,5] = -mu_ag  * second * rotor(-wag*t)  * mu_ag * 2   # ag
+        # from bb (-gg)
+        O[:,15,6] =  mu_2bb * second * rotor(-w2bb*t) * mu_2bb      # 2bb
+        O[:,13,6] =  mu_cb  * second * rotor(-wcb*t)  * mu_cb       # cb
+        O[:,16,6] = -mu_ag  * second * rotor(-wag*t)  * mu_ag       # gg -> ag
         #   twice the weight because of gamma and alpha pathways
-        O[:,17,6] = -mu_bg  * second * rotor(-wbg*t)  * mu_bg * 2
+        O[:,17,6] = -mu_bg  * second * rotor(-wbg*t)  * mu_bg * 2   # bg
         # from ab
-        O[:,13,7] =  mu_ca  * second * rotor(-wca*t)  * mu_ca
-        O[:,16,7] = -mu_bg  * second * rotor(-wbg*t)  * mu_bg
+        O[:,13,7] =  mu_ca  * second * rotor(-wca*t)  * mu_ca       # cb
+        O[:,16,7] = -mu_bg  * second * rotor(-wbg*t)  * mu_bg       # ag
         # from ba
-        O[:,12,8] =  mu_cb  * second * rotor(-wcb*t)  * mu_cb
-        O[:,17,8] = -mu_ag  * second * rotor(-wag*t)  * mu_ag
+        O[:,12,8] =  mu_cb  * second * rotor(-wcb*t)  * mu_cb       # ca
+        O[:,17,8] = -mu_ag  * second * rotor(-wag*t)  * mu_ag       # bg
         # from 2ag
-        O[:,14,9] = -mu_ag  * E2 * rotor(wag*t)  * mu_2aa
-        O[:,16,9] =  mu_2aa * E2 * rotor(w2aa*t) * mu_ag
+        O[:,14,9] = -mu_ag  * E2 * rotor(wag*t)  * mu_2aa       # 2aa
+        O[:,16,9] =  mu_2aa * E2 * rotor(w2aa*t) * mu_ag        # ag
         # from 2bg
-        O[:,15,10] = -mu_bg  * E2     * rotor(wbg*t)  * mu_2bb
-        O[:,16,10] =  mu_2bb * E2     * rotor(w2bb*t) * mu_bg
+        O[:,15,10] = -mu_bg  * E2 * rotor(wbg*t)  * mu_2bb      # 2bb
+        O[:,16,10] =  mu_2bb * E2 * rotor(w2bb*t) * mu_bg       # bg
         # from cg
-        O[:,12,11] = -mu_ag  * E2     * rotor(wag*t)  * mu_ca
-        O[:,13,11] = -mu_bg  * E2     * rotor(wbg*t)  * mu_cb
-        O[:,16,11] =  mu_ca  * E2     * rotor(wca*t)  * mu_ag
-        O[:,17,11] =  mu_cb  * E2     * rotor(wcb*t)  * mu_bg
+        O[:,12,11] = -mu_ag  * E2 * rotor(wag*t)  * mu_ca       # ca
+        O[:,13,11] = -mu_bg  * E2 * rotor(wbg*t)  * mu_cb       # cb
+        O[:,16,11] =  mu_ca  * E2 * rotor(wca*t)  * mu_ag       # bg
+        O[:,17,11] =  mu_cb  * E2 * rotor(wcb*t)  * mu_bg       # ag
 
         # make complex according to Liouville Equation
         O *= complex(0,0.5)

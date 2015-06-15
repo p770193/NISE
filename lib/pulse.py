@@ -125,7 +125,8 @@ class Gauss_chirp_rwa:
         env_fft = np.fft.ifft(env)
         w = np.fft.fftfreq(env_fft.shape[-1], cls.timestep) 
         wn = w * 2*np.pi / wn_to_omega
-        n = -wn
+        # positive slope so positive dz parameter means normal chirp
+        n = wn
         n -= n[0]
         env_fft *= np.exp(1j*n*dz[:,None]*wn[None,:])
         env_new = np.fft.fft(env_fft)

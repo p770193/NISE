@@ -227,6 +227,7 @@ class Measure:
                     xyz = fscolors_beta.xyz(x,y,z, zmax=z_max)
                     if zoom is not None:
                         xyz.zoom(zoom)
+                    if xyz.z.min() == xyz.z.max(): break
                     artist.plot(xyz, alt_z='amp', contour=True)
                     # title has to be written before more objects are printed
                     # to keep focus on main subplot
@@ -261,6 +262,7 @@ class Measure:
                 xyz = fscolors_beta.xyz(x,y,z, zmax=z_max)
                 if zoom is not None:
                     xyz.zoom(zoom)
+                if xyz.z.min() == xyz.z.max(): return
                 artist.plot(xyz, alt_z='amp', contour=True)
                 artist.colorbar()
             save_path = output_folder + '\\' + r''.join([nstr,'.png'])

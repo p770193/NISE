@@ -22,7 +22,7 @@ if __name__ == '__main__':
     import NISE.hamiltonians.params.inhom as inhom
     
     autosave    = True
-    imported    = False
+    imported    = True
     add_nrb     = False
     use_inhom   = False
     plot1       = True
@@ -39,8 +39,8 @@ if __name__ == '__main__':
     #rel_name = r'\2015.04.29 19-44-25'
     #rel_name2 = r'\2015.04.29 19-45-34'
     # imports of w1w2d1 scans
-    rel_name = r'\2015.04.29 22-21-14'
-    rel_name2 = r'\2015.04.29 22-28-18'
+    rel_name = r'\2015.04.29 22-48-47 - w1w2d1 no chirp - driven'
+    rel_name2 = r'\2015.04.29 22-55-36 - w1w2d1 chirp - driven'
 
     # define the chirp axis for positioning
     dzs = t.S.Axis(0, 'dz', also=[1,2], name=r'$dz_1=dz_2=dz_{2^\prime}$',

@@ -121,7 +121,7 @@ class Experiment:
     def get_coords(self):
         # return the coordinates of all pulses
         for key, value in self.cols.items():
-            print '{0}:  {1}'.format(key, self.positions[:,cols[key]])
+            print '{0}:  {1}'.format(key, self.positions[:,self.cols[key]])
     
     def acquire(self, H=None, inhom=None):
         # for a specified hamiltonian and using current efield positions, 
@@ -665,7 +665,8 @@ class Scan:
             output_folder = full_name
         # save the output folder for pointing in other exports
         self.output_folder = output_folder
-        os.makedirs(output_folder)
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
         #-----------step 2:  write signal to file (if exists)-----------
         if self.is_run:
             while True:

@@ -13,7 +13,7 @@ import matplotlib.colors as mplcolors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import interp1d
 import matplotlib.gridspec as grd
-from scan import Axis
+import scan
 
 rcParams['contour.negative_linestyle'] = 'solid'
 
@@ -61,16 +61,17 @@ class plot_artist:
 
     def __init__(self, **kwargs):
         # you can pass it xvar and yvars so it sets up the axes properly
+        print kwargs.keys(), kwargs.values()
         for key in ['xaxis', 'yaxis']:
             val = kwargs.get(key)
             if val is not None:
                 setattr(self, key, kwargs.get(key))
-        if isinstance(self.xaxis, Axis):
-            self.xlabel = self.xaxis.name
-        if isinstance(self.yaxis, Axis):
-            self.ylabel = self.yaxis.name
-            if self.xaxis.pulse_var == self.yaxis.pulse_var:
-                self.aspect = 'equal'
+        try: self.xlabel = self.xaxis.name
+        except AttributeError: self.xlabel = None
+        try: self.ylabel = self.yaxis.name
+        except AttributeError: self.ylabel = None
+        if self.xaxis.pulse_var == self.yaxis.pulse_var:
+            self.aspect = 'equal'
     
     def colorbar(self):
         """
