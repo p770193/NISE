@@ -202,22 +202,22 @@ class Omega:
         #   twice the weight because of gamma and alpha pathways
         O[:,17,6] = -mu_bg  * second * rotor(-wbg*t)  * mu_bg * 2   # bg
         # from ab
-        #O[:,13,7] =  mu_ca  * second * rotor(-wca*t)  * mu_ca       # cb
-        #O[:,16,7] = -mu_bg  * second * rotor(-wbg*t)  * mu_bg       # ag
+        O[:,13,7] =  mu_ca  * second * rotor(-wca*t)  * mu_cb       # cb
+        O[:,16,7] = -mu_bg  * second * rotor(-wbg*t)  * mu_ag       # ag
         # from ba
-        #O[:,12,8] =  mu_cb  * second * rotor(-wcb*t)  * mu_cb       # ca
-        #O[:,17,8] = -mu_ag  * second * rotor(-wag*t)  * mu_ag       # bg
+        O[:,12,8] =  mu_cb  * second * rotor(-wcb*t)  * mu_ca       # ca
+        O[:,17,8] = -mu_ag  * second * rotor(-wag*t)  * mu_bg       # bg
         # from 2ag
-        #O[:,14,9] = -mu_ag  * E2 * rotor(wag*t)  * mu_2aa       # 2aa
-        #O[:,16,9] =  mu_2aa * E2 * rotor(w2aa*t) * mu_ag        # ag
+        O[:,14,9] = -mu_ag  * E2 * rotor(wag*t)  * mu_2aa       # 2aa
+        O[:,16,9] =  mu_2aa * E2 * rotor(w2aa*t) * mu_ag        # ag
         # from 2bg
-        #O[:,15,10] = -mu_bg  * E2 * rotor(wbg*t)  * mu_2bb      # 2bb
-        #O[:,16,10] =  mu_2bb * E2 * rotor(w2bb*t) * mu_bg       # bg
+        O[:,15,10] = -mu_bg  * E2 * rotor(wbg*t)  * mu_2bb      # 2bb
+        O[:,17,10] =  mu_2bb * E2 * rotor(w2bb*t) * mu_bg       # bg
         # from cg
-        #O[:,12,11] = -mu_ag  * E2 * rotor(wag*t)  * mu_ca       # ca
-        #O[:,13,11] = -mu_bg  * E2 * rotor(wbg*t)  * mu_cb       # cb
-        #O[:,16,11] =  mu_ca  * E2 * rotor(wca*t)  * mu_ag       # bg
-        #O[:,17,11] =  mu_cb  * E2 * rotor(wcb*t)  * mu_bg       # ag
+        O[:,12,11] = -mu_ag  * E2 * rotor(wag*t)  * mu_ca       # ca
+        O[:,13,11] = -mu_bg  * E2 * rotor(wbg*t)  * mu_cb       # cb
+        O[:,16,11] =  mu_ca  * E2 * rotor(wca*t)  * mu_ag       # bg
+        O[:,17,11] =  mu_cb  * E2 * rotor(wcb*t)  * mu_bg       # ag
 
         # make complex according to Liouville Equation
         O *= complex(0,0.5)
