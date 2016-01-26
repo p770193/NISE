@@ -538,7 +538,8 @@ class Scan:
         from multiprocessing import Pool, cpu_count
         arglist = [[ind, out[ind], kk] for ind in np.ndindex(out.shape[:-2])]
         pool = Pool(processes=cpu_count())
-        chunksize = int(self.sig.size / (cpu_count()*x.size*y.size))
+        ax_size = np.product([self.axis_objs[i].points.size for i in [ax, ay]])       
+        chunksize = int(self.sig.size / (cpu_count()*ax_size))
         print 'chunksize:', chunksize
         with Timer():
             results = pool.map(do_convolution, arglist, chunksize=chunksize)
