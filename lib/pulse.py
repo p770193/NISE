@@ -37,6 +37,7 @@ def _get_t(obj, d):
         t_max = d.max() + obj.late_buffer
     # span up to and including t_max now
     t = np.arange(t_min, t_max+obj.timestep, obj.timestep)
+    # alternate form:
     return t
 
 

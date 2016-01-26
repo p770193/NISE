@@ -29,11 +29,12 @@ def gen_w_0(wa_central, a_coupling):
     w_aa = w_gg
     return np.array( [w_gg, w_ag, -w_ag, w_gg, w_aa, w_2ag, w_ag, w_2aa] )
 
-def gen_Gamma_0(Gamma_ag, Gamma_aa, Gamma_2ag, Gamma_2aa):
+def gen_Gamma_0(tau_ag, tau_aa, tau_2ag, tau_2aa):
     # same as gen_w_0, but for dephasing/relaxation times
-    Gamma = np.array( [0.0, Gamma_ag, Gamma_ag, 
-                       Gamma_aa, Gamma_aa, Gamma_2ag, 
-                       Gamma_ag, Gamma_2aa ] )
+    tau = np.array( [np.inf, tau_ag, tau_ag, 
+                       tau_aa, tau_aa, tau_2ag, 
+                       tau_ag, tau_2aa ], dtype=np.float )
+    Gamma = 1/tau
     return Gamma
 
 class Omega:
@@ -44,7 +45,7 @@ class Omega:
     # all attributes should have good initial guesses for parameters
     dm_vector = ['gg1','ag','ga','gg2','aa','2ag','ag2','2aa']
     #out_group = [[6,7]]#,[7]]
-    out_group = [[6,7]]
+    out_group = [[6],[7]]
     #--------------------------Oscillator Properties--------------------------
     rho_0 = np.zeros((8), dtype=np.complex64)
     rho_0[0] = 1.
@@ -52,18 +53,20 @@ class Omega:
     #1S exciton central position
     wa_central = 7000.
     #exciton-exciton coupling
-    a_coupling = 300.0
+    a_coupling = 0.0
     #dephasing times, 1/fs
-    Gamma_ag  = 1./25
-    Gamma_aa  = 0.0 #1./2000.
-    Gamma_2aa = 1./25
-    Gamma_2ag = 1./15
+    tau_ag  = 25.
+    tau_aa  = np.inf #2000.
+    tau_2aa = 25.
+    tau_2ag = 15.
     #transition dipoles (a.u.)
     mu_ag =  1.0
     mu_2aa = 1.0 * mu_ag #HO approx (1.414) vs. uncorr. electron approx. (1.)
     #--------------------------Recorded attributes--------------------------
     out_vars = ['dm_vector', 'out_group', 'rho_0', 'mu_ag', 'mu_2aa', 
-                'wa_central', 'a_coupling', 'pc', 'propagator', 'D']
+                'wa_central', 'a_coupling', 'pc', 'propagator', 'D',
+                'tau_ag', 'tau_aa', 'tau_2aa', 'tau_2ag',
+                'Gamma', 'w_0']
     #--------------------------Methods--------------------------
     def __init__(self, **kwargs):
         # inherit all class attributes unless kwargs has them; then use those 
@@ -76,8 +79,8 @@ class Omega:
                 print 'did not recognize attribute {0}.  No assignment made'.format(key)
         # with this set, initialize parameter vectors
         self.w_0 = gen_w_0(self.wa_central, self.a_coupling)
-        self.Gamma = gen_Gamma_0(self.Gamma_ag, self.Gamma_aa, self.Gamma_2ag, 
-                                 self.Gamma_2aa)
+        self.Gamma = gen_Gamma_0(self.tau_ag, self.tau_aa, self.tau_2ag, 
+                                 self.tau_2aa)
 
     def o(self, efields, t, wl):
         # combine the two pulse permutations to produce one output array
@@ -104,11 +107,11 @@ class Omega:
         
         mu_ag = self.mu_ag
         mu_2aa = self.mu_2aa
-        D = self.D
-        D01 = D
-        D12 = max(D-1, 0)
+        D = float(self.D)
+        D01 = D**2
+        D12 = max((D-1), 0)**2
         D10 = 1.
-        D21 = 2.
+        D21 = 2.**2
     
         if w1first==True:
             first  = E1
@@ -121,9 +124,9 @@ class Omega:
         O[:,1,0] =  D01 * mu_ag  * first  * rotor(-wag*t)
         O[:,2,0] = -D01 * mu_ag  * E2     * rotor(wag*t)
         # from ag1
+        O[:,3,1] =  1    * mu_ag  * E2     * rotor(wag*t)
         O[:,4,1] = -1    * mu_ag  * E2     * rotor(wag*t)
         O[:,5,1] =  D12  * mu_2aa * second * rotor(-w2aa*t)
-        O[:,3,1] =  1    * mu_ag  * E2     * rotor(wag*t)
         # from ga
         O[:,4,2] =  1 * mu_ag  * first  * rotor(-wag*t)
         O[:,3,2] = -1 * mu_ag  * first  * rotor(-wag*t)

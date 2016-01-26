@@ -14,7 +14,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import interp1d
 import matplotlib.gridspec as grd
 import scan
-
+from . import cm
 rcParams['contour.negative_linestyle'] = 'solid'
 
 class plot_artist:
@@ -22,24 +22,7 @@ class plot_artist:
         class for initializing plotting functions
         depends on dimensionality, presets, etc.
     """
-    # colormap
-    signed_cm = ['#0000FF', #blue
-                '#00BBFF', #blue-aqua
-                '#00FFFF', #aqua
-                '#FFFFFF', #white
-                '#FFFF00', #yellow
-                '#FFBB00', #orange
-                '#FF0000'] #red   
-    wrightcm = ['#FFFFFF',
-                '#0000FF',
-                '#00FFFF',
-                '#00FF00',
-                '#FFFF00',
-                '#FF0000',
-                '#881111']
-    # define colormaps
-    mycm=mplcolors.LinearSegmentedColormap.from_list('wright',wrightcm)
-    altcm=mplcolors.LinearSegmentedColormap.from_list('signed',signed_cm)
+    mycm=cm.chw2#mplcolors.LinearSegmentedColormap.from_list('wright',wrightcm)
 
     aspect=None
     # font style attributes
@@ -50,7 +33,7 @@ class plot_artist:
     xlim=[]
     ylim=[]
 
-    contour_n = 11
+    contour_n = 9
     contour_kwargs={'colors':'k',
                     'linewidths':2}
     # attributes of sideplots
@@ -302,7 +285,9 @@ class plot_artist:
                                cmap=self.mycm)
         self.cax=cax
         if contour:
-            plt.contour(xyz.x, xyz.y, z_norm, self.contour_n, 
+            plt.contour(xyz.x, xyz.y, z_norm, 
+                        levels=np.linspace(z_norm.min(), z_norm.max(), 
+                                           num=self.contour_n+2)[1:-1], 
                         **self.contour_kwargs)
         #matplotlib.axes.rcParams.viewitems
         plt.xticks(rotation=45)

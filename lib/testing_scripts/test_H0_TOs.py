@@ -76,9 +76,10 @@ if __name__ == '__main__':
             inhom_object = inhom.Inhom()
         H = H_1.Omega()
         H.TOs = TOs
-        H.tau_ag  = 10.
-        H.tau_2aa = 10.
-        H.tau_2ag = 10.
+        H.tau_ag  = 12.5
+        H.tau_2aa = 12.5
+        H.tau_2ag = 12.5
+        #H.mu_2aa = 0.75
         trive.late_buffer = 250.
         #out1 = trive.exp.scan(w1, w2, d2, H=H, inhom_object=inhom_object)
         out1 = trive.exp.scan(d1, d2, H=H, inhom_object=inhom_object)

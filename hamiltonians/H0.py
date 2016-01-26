@@ -44,18 +44,18 @@ class Omega:
     #--------------------------Oscillator Properties--------------------------
     rho_0 = np.zeros((len(dm_vector)), dtype=np.complex64)
     rho_0[0] = 1.
-    #1S exciton central position
+    # 1S exciton central position
     wa_central = 7000.
-    #exciton-exciton coupling
+    # exciton-exciton coupling
     a_coupling = 0. # cm-1
-    #dephasing times, fs
+    # dephasing times, fs
     tau_ag  = 50.
     tau_aa  = np.inf #1./2000.
     tau_2aa = tau_ag
     tau_2ag = tau_ag
-    #transition dipoles (a.u.)
+    # transition dipoles (a.u.)
     mu_ag =  1.0
-    mu_2aa = 1.0 * mu_ag #HO approx (1.414) vs. uncorr. electron approx. (1.)
+    mu_2aa = 1.0 * mu_ag # HO approx (1.414) vs. uncorr. electron approx. (1.)
     # TOs sets which time-ordered pathways to include (1-6 for TrEE)
     # defaults to include all time-orderings included
     TOs = range(7)[1:] 
@@ -127,19 +127,19 @@ class Omega:
             O[:,4,1] =  mu_2aa * second * rotor(-w2aa*t)
         #   to pop
         if w1first and 1 in self.TOs:
-            O[:,3,1] =  mu_ag  * E2     * rotor(wag*t)
+            O[:,3,1] =  -mu_ag  * E2     * rotor(wag*t)
         if not w1first and 6 in self.TOs:
-            O[:,3,1] =  mu_ag  * E2     * rotor(wag*t)
+            O[:,3,1] =  -mu_ag  * E2     * rotor(wag*t)
         # from ga
-        O[:,3,2] = -mu_ag  * first  * rotor(-wag*t)
+        O[:,3,2] =  mu_ag  * first  * rotor(-wag*t)
         # from gg-aa
-        O[:,5,3] =  mu_ag  * second * rotor(-wag*t)      * mu_ag
+        O[:,5,3]  = -mu_ag  * second * rotor(-wag*t)      * mu_ag
         #   because of alpha and gamma pathways, count twice
-        O[:,5,3] += mu_ag  * second * rotor(-wag*t)      * mu_ag
-        O[:,6,3] = -mu_2aa * second * rotor(-w2aa*t)     * mu_2aa
+        O[:,5,3] -= mu_ag  * second * rotor(-wag*t)      * mu_ag
+        O[:,6,3]  = mu_2aa * second * rotor(-w2aa*t)     * mu_2aa
         # from 2ag
-        O[:,6,4] = -mu_ag  * E2     * rotor(wag*t)       * mu_2aa
-        O[:,5,4] =  mu_2aa * E2     * rotor(w2aa*t)      * mu_ag
+        O[:,6,4] =  mu_ag  * E2     * rotor(wag*t)       * mu_2aa
+        O[:,5,4] = -mu_2aa * E2     * rotor(w2aa*t)      * mu_ag
         
         # make complex according to Liouville Equation
         O *= complex(0,0.5)

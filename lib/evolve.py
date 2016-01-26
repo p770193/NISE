@@ -40,8 +40,8 @@ def rk(t, efields, iprime, inhom_object, omega_object):
     ws = ws * wn_to_omega
     # define out_groups
     out_group = omega_object.out_group
-    rho_emitted = np.zeros((len(out_group),iprime), dtype=np.complex64)
-    rho_emitted_prev = np.zeros((len(out_group),iprime), dtype=np.complex64)
+    rho_emitted = np.zeros((len(out_group), iprime), dtype=np.complex64)
+    rho_emitted_prev = np.zeros((len(out_group), iprime), dtype=np.complex64)
     for l in range(len(zeta)):
         # identify the frequencies of the states?
         if len(ws.shape) == 1:

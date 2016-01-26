@@ -321,7 +321,7 @@ class Scan:
         shape.append(len(self.H.out_group))
         shape.append(self.iprime)
 
-        pulse_class= pulse.__dict__[self.pulse_class_name]
+        pulse_class = pulse.__dict__[self.pulse_class_name]
         pulse_class.timestep = self.timestep
         pulse_class.early_buffer = self.early_buffer
         pulse_class.late_buffer = self.late_buffer
@@ -332,7 +332,7 @@ class Scan:
         i=0
         nexti = 1
         tot = self.array.size
-        if self.pc:
+        if self.pc: # phase cycling
             outshape = list(shape)
             for i in xrange(len(self.pc_shape)):
                 outshape.insert(-2,self.pc_shape[i])
@@ -353,7 +353,10 @@ class Scan:
                         jfields = efields * rotor(phases)[:,None]
                         # signal indices are:
                         # [axes..., phases..., outgroups..., t]
-                        sig1[indices][jndex] = evolve_func(t, jfields, self.iprime, self.inhom_object, self.H)
+                        sig1[indices][jndex] = evolve_func(t, jfields, 
+                                                           self.iprime, 
+                                                           self.inhom_object, 
+                                                           self.H)
                         progress = i / float(tot) * 100 
                         if progress >= nexti:
                             update_progress(progress)
@@ -362,7 +365,7 @@ class Scan:
                 update_progress(100)
             # normalize to the number of samples taken
             sig1 = sig1 / self.pc_array.size
-        else:
+        else: # not phase cycling
             sig1 = np.zeros(shape, dtype=np.complex64)
             if mp:
                 """
@@ -389,6 +392,7 @@ class Scan:
                 arglist = [[ind, efp[ind]] for ind in np.ndindex(self.array.shape)]
                 #"""    
                 from multiprocessing import Pool, cpu_count
+                #print self.H.__dict__
                 arglist = [[ind, self.iprime, self.inhom_object, self.H, 
                             pulse_class, efp[ind], self.pm, self.timestep, 
                             self.early_buffer, self.late_buffer, evolve_func] 
@@ -448,6 +452,31 @@ class Scan:
         wm = wtemp.sum(axis=-1) 
         return wm
 
+    def kernel(self, ax, ay, fwhm_maj, fwhm_min, theta=np.pi/4., 
+              center=None):
+        """
+        make a kernel (ellipsoidal 2D gaussian) to be used for smearing
+        """
+        x = self.axis_objs[ax].points.copy()
+        y = self.axis_objs[ay].points.copy()
+        if center is None:
+            center = [x.sum() / x.size, y.sum()/y.size]
+        x -= center[0]
+        y -= center[1]
+        s_maj = fwhm_maj / 2*np.sqrt(2*np.log(2))
+        s_min = fwhm_min / 2*np.sqrt(2*np.log(2))
+        # u is the major axis, y is the minor axis
+        uu = np.cos(theta)*x[None,:] + np.sin(theta) * y[:,None]
+        vv = np.cos(theta)*y[:,None] - np.sin(theta) * x[None,:]
+        uu /= np.sqrt(2) * s_maj
+        vv /= np.sqrt(2) * s_min
+        kk =  np.exp(-uu**2 -vv**2)
+        # normalize the distribution
+        kk /= kk.sum()
+        # analytical would be 2 * np.pi * s_maj * s_min, but factor 
+        # in grid spacings as well (du, dv), but we'll forego this
+        return kk
+
     def smear(self, ax, ay, fwhm_maj, fwhm_min, theta=np.pi/4., 
               center=None, save=True):
         """
@@ -481,26 +510,9 @@ class Scan:
         if not self.is_run:
             print 'no data to perform convolution on!'
             return
-        # make the convolution kernel
-        x = self.axis_objs[ax].points.copy()
-        y = self.axis_objs[ay].points.copy()
-        if center is None:
-            center = [x.sum() / x.size, y.sum()/y.size]
-        x -= center[0]
-        y -= center[1]
-        s_maj = fwhm_maj / 2*np.sqrt(2*np.log(2))
-        s_min = fwhm_min / 2*np.sqrt(2*np.log(2))
-        # u is the major axis, y is the minor axis
-        uu = np.cos(theta)*x[None,:] + np.sin(theta) * y[:,None]
-        vv = np.cos(theta)*y[:,None] - np.sin(theta) * x[None,:]
-        uu /= np.sqrt(2) * s_maj
-        vv /= np.sqrt(2) * s_min
-        kk =  np.exp(-uu**2 -vv**2)
-        # normalize the distribution
-        kk /= kk.sum()
-        # analytical would be 2 * np.pi * s_maj * s_min, but factor 
-        # in grid spacings as well (du, dv), but we'll forego this
-        # we've created the kernel, let's convolve now
+        kk = self.kernel(ax, ay, fwhm_maj, fwhm_min, theta=theta,
+                         center=center)
+        # we've created the kernel; let's convolve now
         out = self.sig.copy()
         wm = self.get_color() * wn_to_omega
         tprime = np.arange(self.sig.shape[-1]) * self.timestep -self.early_buffer
@@ -608,11 +620,12 @@ class Scan:
             # figure out the biggest array size we will get
             d_ind = pulse_class.cols['d']
             t = pulse_class.get_t(efp[...,d_ind])
+            # now that we know t vals, we can set fixed bounds
+            pulse_class.fixed_bounds_min =  t.min()
+            pulse_class.fixed_bounds_max =  t.max()
+            pulse_class.fixed_bounds = True
             efields_shape[-1] = t.size
             efields = np.zeros((efields_shape), dtype=np.complex)
-            pulse_class.fixed_bounds_min = t.min()
-            pulse_class.fixed_bounds_max = t.max()
-            pulse_class.fixed_bounds = True
             try:
                 with Timer():
                     for ind in np.ndindex(tuple(efields_shape[:-2])):
@@ -1114,6 +1127,7 @@ def do_work(arglist):
     t, efields = pulse_class.pulse(efpi, pm=pm)
     out = evolve_func(t, efields, iprime, inhom_object, H)
     if indices[-1] == 0:
-        #print str(inhom_object.zeta_bound) + str(len(inhom_object.zeta)) + '\r',
-        print str(indices) + str(pulse_class.timestep) + str(iprime) + '\r',
+        #print str(inhom_object.zeta_bound) + str(len(inhom_object.zeta)) + '\r',    
+        #print str(H.tau_ag), str(H.tau_2ag), '\r'
+        print str(indices),  str(pulse_class.timestep), str(iprime) + '              \r',
     return indices, out
