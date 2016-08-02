@@ -3,6 +3,8 @@
     hamiltonians can collect here
 """
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from .misc import *
 from . import fscolors_beta as fscolors_beta
 import matplotlib.pyplot as plt
@@ -28,7 +30,7 @@ class Measure:
     # initialization should specify the measurement instructions
     def __init__(self, scan_obj, *instruction_classes, **kwargs):
         if not scan_obj.is_run:
-            print 'cannot measure scan until signal is computed with \'run\' method'
+            print('cannot measure scan until signal is computed with \'run\' method')
             return
         # if all is well, internalize the scan objs
         # pointing will save space...
@@ -76,8 +78,8 @@ class Measure:
             except AttributeError:
                 # output folder is not defined
                 output_folder = NISE_path + r'\data'
-                print 'Could not find output folder.  Plots written to {0}'.format(
-                    output_folder)
+                print('Could not find output folder.  Plots written to {0}'.format(
+                    output_folder))
             pol_folder = output_folder + r'\measured'
             mkdir_p(pol_folder)
             pol_args = {obj.name:obj.points for obj in self.scan_obj.axis_objs}
@@ -87,7 +89,7 @@ class Measure:
                 raise TypeError('pol name is reserved; cannot be used for axis_objs name')
             pol_name = pol_folder + '\\' + strftime("%Y.%m.%d %H-%M-%S")
             np.savez(pol_name, **pol_args)
-            print 'pol saved as {0}'.format(pol_name)
+            print('pol saved as {0}'.format(pol_name))
 
     def plot(self, xaxis, yaxis=None, artist=None, zoom=None, folder_name=None):
         """
@@ -108,12 +110,12 @@ class Measure:
         try:
             dim = len([i for i in range(len(self.pol.shape)) if self.pol.shape[i] > 1])
         except NameError:
-            print 'running detection operations...'
+            print('running detection operations...')
             self.run()
             dim = len(self.pol.shape)
         # make sure parse_axes is legit
         if xaxis > dim or xaxis < 0:
-            print 'parse_axes specifies axes out of bounds'
+            print('parse_axes specifies axes out of bounds')
             raise TypeError
         # plotting process differs based on number of plots and plot dimensions
         # new strategy:  make y the second-to-last axis, x the last
@@ -139,14 +141,14 @@ class Measure:
             # make sure we're not going to make too many windows:
             num_plots = np.prod(iterator_shape)
             if num_plots > Measure.plot_lim: 
-                print 'number of plots must be less than Measure.plot_lim = ', Measure.plot_lim
+                print('number of plots must be less than Measure.plot_lim = ', Measure.plot_lim)
                 raise TypeError
             for i in xrange(len(self.pol.shape)):
                 if i not in var_list:
                     index_map.append(i)
         elif dim - plot_dim < 0:
             # unable to use:  plot dimensionality is higher than actual scan dimensions
-            print 'requested dimensionality exceeds sample space'
+            print('requested dimensionality exceeds sample space')
             raise TypeError
         # declare the artist instance for plotting
         if isinstance(artist, fscolors_beta.plot_artist):
@@ -171,8 +173,8 @@ class Measure:
         except AttributeError:
             # output folder is not defined
             output_folder = NISE_path + r'\data'
-            print 'Could not find output folder.  Plots written to {0}'.format(
-                output_folder)
+            print('Could not find output folder.  Plots written to {0}'.format(
+                output_folder))
         nstr = r''
         if dim - plot_dim >= 1:
             # many images, so generate its own output folder
@@ -378,7 +380,7 @@ class SLD:
         elif cls.in_space == 't': #time
             delta = scan_obj.timestep
         else:
-            print 'using a delta of 1'
+            print('using a delta of 1')
             delta = 1.
         # how to decide whether to use dt or dw?
         # include timestep later?
@@ -396,7 +398,7 @@ class SLD:
             return True
         else:
             # cannot compute absolute signal without knowing the space we are in
-            print 'cannot discern whether integration space is time or frequency'
+            print('cannot discern whether integration space is time or frequency')
             return False
 
 class Scatter:
@@ -441,7 +443,7 @@ class Scatter:
                 sig *= 0.
             sig += lo[...,None,:]
         else:
-            print 'sig shape does not match lo shape; aborting heterodyne'
+            print('sig shape does not match lo shape; aborting heterodyne')
             return sig
         #print sig.shape
         return sig
@@ -455,11 +457,11 @@ class Scatter:
         if space == 't': # lets only worry about time for now
             return True
         elif space == 'f':
-            print 'heterodyne only supports time-interference at this time'
+            print('heterodyne only supports time-interference at this time')
             return False
         else:
             # cannot compute absolute signal without knowing the space we are in
-            print 'cannot discern whether space is time or frequency'
+            print('cannot discern whether space is time or frequency')
             return False
         pass
 
@@ -498,11 +500,11 @@ class LO:
         if space == 't': # lets only worry about time for now
             return True
         elif space == 'f':
-            print 'heterodyne only supports time-interference at this time'
+            print('heterodyne only supports time-interference at this time')
             return False
         else:
             # cannot compute absolute signal without knowing the space we are in
-            print 'cannot discern whether space is time or frequency'
+            print('cannot discern whether space is time or frequency')
             return False
         pass
 

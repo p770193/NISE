@@ -5,6 +5,8 @@ Created on Fri Aug 08 22:31:23 2014
 @author: Dan
 """
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import os
 import numpy as np
 from matplotlib import rcParams
@@ -13,7 +15,7 @@ import matplotlib.colors as mplcolors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.interpolate import interp1d
 import matplotlib.gridspec as grd
-import scan
+from . import scan
 from . import cm
 rcParams['contour.negative_linestyle'] = 'solid'
 
@@ -44,7 +46,7 @@ class plot_artist:
 
     def __init__(self, **kwargs):
         # you can pass it xvar and yvars so it sets up the axes properly
-        print kwargs.keys(), kwargs.values()
+        print(kwargs.keys(), kwargs.values())
         for key in ['xaxis', 'yaxis']:
             val = kwargs.get(key)
             if val is not None:
@@ -64,7 +66,7 @@ class plot_artist:
         if self.s1:
             ax_cb = plt.subplot(self.gs[1])
         else:
-            print 'must create plot before adding colorbar'
+            print('must create plot before adding colorbar')
             return
         if self.alt_z == 'int':
             ticks = np.linspace(-1,1,21)
@@ -105,7 +107,7 @@ class plot_artist:
             self.p1.colorbar(self.cax, ticks=ticks, cax=ax_cb).ax.set_yticklabels(ticklabels)
             #self.p1.colorbar(self.cax, ticks=ticks, cax=ax_cb)
         else: #could not determine colorbar type
-            print 'color scale used not recognized:  cannot produce colorbar'
+            print('color scale used not recognized:  cannot produce colorbar')
 
     def plot(self, xyz, alt_z='raw', 
                scantype=None, contour=False, aspect=None, pixelated=False, 
@@ -177,7 +179,7 @@ class plot_artist:
                 # are on the same side of znull, then the data only has one sign!
                 if znull >= max(zmin, zmax):
                     # data is negative sign
-                    print 'data has only negative sign'
+                    print('data has only negative sign')
                     if dynamic_range:
                         ubound = zmax
                     else:
@@ -185,7 +187,7 @@ class plot_artist:
                     lbound = zmin
                 elif znull <= min(zmin, zmax):
                     # data is positive sign
-                    print 'data has only positive sign'
+                    print('data has only positive sign')
                     if dynamic_range:
                         lbound = zmin
                     else:
@@ -193,7 +195,7 @@ class plot_artist:
                     ubound = zmax
                 else:
                     # data has positive and negative sign, so center the colorbar
-                    print 'data has positive and negative sign'
+                    print('data has positive and negative sign')
                     if dynamic_range:
                         # check for whether positive or negative signals extend less
                         # using smaller range on both sides of znull ensures full 
@@ -210,7 +212,7 @@ class plot_artist:
                         else:
                             ubound = np.abs(zmin)
                     lbound = -ubound
-            print 'lower and upper bounds:', lbound, ubound
+            print('lower and upper bounds:', lbound, ubound)
             levels = np.linspace(lbound, ubound, num=200)
             # artist need this information for colorbar
             self.zmin, self.zmax = zmin, zmax
@@ -252,7 +254,7 @@ class plot_artist:
                 z_norm = z_norm.filled(self.ceiling)
             levels = np.linspace(self.floor, self.ceiling, num=200)
         else:
-            print 'alt_z type {0} not recognized; plotting on raw scale'.format(alt_z)
+            print('alt_z type {0} not recognized; plotting on raw scale'.format(alt_z))
             z_norm = xyz.z
             levels = 200 
         xyz.alt_z=alt_z
@@ -311,11 +313,11 @@ class plot_artist:
             plt.ylabel(self.ylabel, fontsize=self.font_size)
             plt.xlabel(self.xlabel, fontsize=self.font_size)
         except:
-            print 'labels failed to print'
+            print('labels failed to print')
         p1.subplots_adjust(bottom=0.18)
         #s1.set_adjustable('box-forced')
         s1.autoscale(False)
-        print 'plotting finished!'
+        print('plotting finished!')
 
     def side_plots(self, subplot, 
                     # do we project (bin) either axis?
@@ -372,7 +374,7 @@ class plot_artist:
                 axCorry.set_xlim([0,1.1])
             axCorry.set_ylim([self.yi.min(), self.yi.max()])
         if isinstance(x_list, np.ndarray): 
-            print x_list.shape
+            print(x_list.shape)
             axCorrx.plot(x_list[0],x_list[1], self.side_plot_else_linetype,
                          **self.side_plot_else_kwargs)
             axCorrx.set_ylim([0.,1.1])
@@ -380,7 +382,7 @@ class plot_artist:
             try:
                 x_list = x_obj.data[0][2].copy()
             except IndexError:
-                print 'Import failed--data type was not recognized'
+                print('Import failed--data type was not recognized')
             # spectrometer has units of nm, so make sure these agree
             if self.xvar in ['w1','w2','wm']:
                 x_list[0] = 10**7 / x_list[0]
@@ -398,7 +400,7 @@ class plot_artist:
             try:
                 y_list = y_obj.data[0][2].copy()
             except IndexError:
-                print 'Import failed--data type was not recognized'
+                print('Import failed--data type was not recognized')
             if self.yvar in ['w1','w2','wm']:
                 y_list[0] = 10**7 / y_list[0]
             #normalize the data set
@@ -417,7 +419,7 @@ class plot_artist:
         try:
             self.p1
         except NameError:
-            print 'no plot is associated with the data. cannot save'
+            print('no plot is associated with the data. cannot save')
             return
         if not fname:
             fname = self.filename
@@ -434,7 +436,7 @@ class plot_artist:
         fname = find_name(fname, file_suffix)
         fname = fname + '.' + file_suffix
         self.p1.savefig(fname, **kwargs)
-        print 'image saved as {0}'.format(fname)
+        print('image saved as {0}'.format(fname))
     
     
 
@@ -483,7 +485,7 @@ class xyz:
 
     def center(self, axis=None, center=None):
         if center == 'max':
-            print 'listing center as the point of maximum value'
+            print('listing center as the point of maximum value')
             if axis == 0 or axis in ['x', self.xvar]:
                 index = self.zi.argmax(axis=0)
                 set_var = self.xi
@@ -495,7 +497,7 @@ class xyz:
                 max_var = self.xi
                 out = np.zeros(self.yi.shape)
             else:
-                print 'Input error:  axis not identified'
+                print('Input error:  axis not identified')
                 return
             for i in range(len(set_var)):
                 out[i] = max_var[index[i]]
@@ -529,10 +531,10 @@ class xyz:
             int_var = self.x
             out = np.zeros(self.y.shape)
         else:
-            print 'Input error:  axis not identified'
+            print('Input error:  axis not identified')
             return
         if not isinstance(moment, int):
-            print 'moment must be an integer.  recieved {0}'.format(moment)
+            print('moment must be an integer.  recieved {0}'.format(moment))
             return
         for i in range(out.shape[0]):
             # ignoring znull for this calculation, and offseting my slice by min
@@ -583,7 +585,7 @@ class xyz:
             try:
                 out[:,i] = leastsq(gauss_residuals, p0[:,i], args=(z[:,i]-self.znull, var))[0]
             except:
-                print 'least squares failed on {0}:  initial guesses will be used instead'.format(i)
+                print('least squares failed on {0}:  initial guesses will be used instead'.format(i))
                 out[:,i] = p0[:,i]
         out[2] = np.abs(out[2])
         return out
@@ -654,7 +656,7 @@ class xyz:
                  for y in range(len(self.y)):
                      out[x][1] += self.z[y][x] - self.znull
          else:
-             print 'specified axis is not recognized'
+             print('specified axis is not recognized')
          return out
 
         
@@ -673,11 +675,11 @@ def makefit(**kwargs):
             if name in Fit.cols.keys():
                 out[:, Fit.cols[name][0]] = value
             else:
-                print 'name {0} is not an appropriate column name'.format(name)
+                print('name {0} is not an appropriate column name'.format(name))
                 return
         else:
-            print 'Error: not all columns are the same length:  len({0})={1}, len({2}) = {3}'.format(
-                kwargs.keys()[0], n, name, len(value))
+            print('Error: not all columns are the same length:  len({0})={1}, len({2}) = {3}'.format(
+                kwargs.keys()[0], n, name, len(value)))
             return
     return out
 
@@ -702,7 +704,7 @@ def find_name(fname, suffix):
                i = i + 1
                # prevent infinite loop if the code isn't perfect
                if i > 100:
-                   print 'didn\'t find a good name; index used up to 100!'
+                   print('didn\'t find a good name; index used up to 100!')
                    fname = False
                    good_name=True
         except IOError:
@@ -728,7 +730,7 @@ def make_tune(obj, set_var, fname=None, amp='int', center='exp_val', fit=True,
         to have a specific color you want to set zero delay to.
     """
     if set_var not in ['x', 'y', obj.xvar, obj.yvar]:
-        print 'Error:  set_var type not supported: {0}'.format(set_var)
+        print('Error:  set_var type not supported: {0}'.format(set_var))
     # make sure obj type is appropriate and extract properties
     #zimin = obj.zi.min()
     tempzi = obj.zi - obj.znull
@@ -816,12 +818,12 @@ def make_tune(obj, set_var, fname=None, amp='int', center='exp_val', fit=True,
         fname = filepath + '\\' + fname
     fstr = find_name(fname, 'fit')
     if not fstr:
-        print 'Could not write file without overwriting an existing file'
-        print 'Aborting file write'
+        print('Could not write file without overwriting an existing file')
+        print('Aborting file write')
         return
     with file(fstr+'.fit', 'a') as exp_file:
         np.savetxt(exp_file, out, delimiter='\t', fmt='%.3f')
-    print 'saved as {0}'.format(fstr+'.fit')
+    print('saved as {0}'.format(fstr+'.fit'))
 
 def filename_parse(fstr):
     """

@@ -4,12 +4,19 @@ Created on Fri Jun 28 17:54:35 2013
 
 @author: Dan
 """
+
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 #import csv
 import os, sys
 import csv
-import cPickle as pickle
 from time import clock, strftime
 #from scipy.interpolate import griddata, interp2d
+
+if sys.version_info[0] == 2:
+    import cPickle as pickle
+else:
+    import pickle
 
 from .misc import *
 from . import evolve as evolve
@@ -54,7 +61,7 @@ class Axis:
         try:
             pulse_class = pulse.__dict__[pulse_class_name]
         except KeyError:
-            print 'We could not find the specified pulse class {0}'.format(self.pulse_class_name)
+            print('We could not find the specified pulse class {0}'.format(self.pulse_class_name))
         self.cols = pulse_class.cols
         # this initial call is just to initialize the coordinates used
         self._set_coords()
@@ -116,12 +123,12 @@ class Experiment:
                 if value == coord[1]:
                     pulse_property = key
             pulse_number = coord[0]
-            print '{0}{1} moved to {2}'.format(pulse_property, pulse_number, pos)
+            print('{0}{1} moved to {2}'.format(pulse_property, pulse_number, pos))
 
     def get_coords(self):
         # return the coordinates of all pulses
         for key, value in self.cols.items():
-            print '{0}:  {1}'.format(key, self.positions[:,self.cols[key]])
+            print('{0}:  {1}'.format(key, self.positions[:,self.cols[key]]))
     
     def acquire(self, H=None, inhom=None):
         # for a specified hamiltonian and using current efield positions, 
@@ -136,14 +143,14 @@ class Experiment:
         try:
             H = sample_args['H']
         except KeyError:
-            print 'using default hamiltonian'
+            print('using default hamiltonian')
             import NISE.hamiltonians.H0 as H0
             H = H0.Omega()
         try:
             inhom_object = sample_args['inhom_object']
         except KeyError:
             # resort to the 'null' inhomogeneity
-            print 'using no inhomogeneity profile as default'
+            print('using no inhomogeneity profile as default')
             import NISE.hamiltonians.params.inhom as inhom
             inhom_object = inhom.Inhom()
         out = Scan(self.positions, self.pulse_class_name, self.pm, 
@@ -233,7 +240,7 @@ class Scan:
             # that we have to account for linear terms in, so find the (first) 
             # minimum pm magnitude and make it the reference phase
             self.reference = np.where(np.abs(self.pm) == min(np.abs(self.pm)))[0][0]
-            print 'pulse index {0} will be the referenced phase'.format(self.reference)
+            print('pulse index {0} will be the referenced phase'.format(self.reference))
             # the problem:  we will be computing the linear polarization of 
             # this beam, so don't include it in the phase space search
             for i in range(self.npulses):
@@ -250,15 +257,15 @@ class Scan:
             # now create the array shape for phase matching loops
             self.pc_shape = pc_shape
             self.pc_array = np.zeros((pc_shape))
-            print 'encorporating phase cycling into dimensionality of scan'
-            print 'array shape of {0} will be inserted into scan dimensions'.format(self.pc_shape)
+            print('encorporating phase cycling into dimensionality of scan')
+            print('array shape of {0} will be inserted into scan dimensions'.format(self.pc_shape))
         else:
             self.pc = False
 
     def axes(self):
         # report the axes names and their index positions
         for i, obj in enumerate(self.axis_objs):
-            print i, obj.name
+            print(i, obj.name)
 
     def get_efield_params(self, indices=None):
         # another one-run function, like run
@@ -270,7 +277,7 @@ class Scan:
             # prevent from re-running, as this is subject to errors if run 
             # again.  For some reason running this twice alters the params
             self.efp
-            print 'stopped a recall of get_efield_params'
+            print('stopped a recall of get_efield_params')
             return self.efp.copy()
         except AttributeError:
             if indices is None:
@@ -309,7 +316,7 @@ class Scan:
 
     def run(self, autosave=True, mp=True, chunk=False):
         if self.is_run:
-            print 'scan has already run.  to execute again, make another scan object'
+            print('scan has already run.  to execute again, make another scan object')
             return
         # initialize e-fields, using these parameters
         try:
@@ -402,7 +409,7 @@ class Scan:
                     chunksize = int(self.array.size / cpu_count())
                 else:
                     chunksize = 1
-                print 'chunksize:', chunksize
+                print('chunksize:', chunksize)
                 with Timer():
                     results = pool.map(do_work, arglist, chunksize=chunksize)
                 pool.close()
@@ -508,7 +515,7 @@ class Scan:
             without any phase changes
         """
         if not self.is_run:
-            print 'no data to perform convolution on!'
+            print('no data to perform convolution on!')
             return
         kk = self.kernel(ax, ay, fwhm_maj, fwhm_min, theta=theta,
                          center=center)
@@ -540,7 +547,7 @@ class Scan:
         pool = Pool(processes=cpu_count())
         ax_size = np.product([self.axis_objs[i].points.size for i in [ax, ay]])       
         chunksize = int(self.sig.size / (cpu_count()*ax_size))
-        print 'chunksize:', chunksize
+        print('chunksize:', chunksize)
         with Timer():
             results = pool.map(do_convolution, arglist, chunksize=chunksize)
         pool.close()
@@ -596,7 +603,7 @@ class Scan:
             plt.colorbar()
             plt.savefig(self.output_folder + r'\smear kernel.png')
             plt.close()
-        print 'smearing complete!'
+        print('smearing complete!')
         return 
 
     def efields(self, windowed=True):
@@ -643,17 +650,17 @@ class Scan:
             efields = self.efields()
             efields = efields.prod(axis=-2)
             ratio = np.abs(self.sig.sum(axis=-2)).sum(axis=-1).max() / np.abs(efields).sum(axis=-1).max()
-            print 'sig:nrb ratio of {0}'.format(ratio)
+            print('sig:nrb ratio of {0}'.format(ratio))
             return efields
         else:
-            print 'cannot plot data, scan object has not been run yet'
+            print('cannot plot data, scan object has not been run yet')
 
     def plot(self):
         if self.is_run:
             # plot the obtained data
-            print 'functionality has not been implemented yet'
+            print('functionality has not been implemented yet')
         else:
-            print 'cannot plot data, scan obejct {0} has not been run yet'
+            print('cannot plot data, scan obejct {0} has not been run yet')
 
     def save(self, name=None, full_name=None, method='pickle'):
         """
@@ -714,7 +721,7 @@ class Scan:
             with open(pickle_full_name, 'wb') as out_s:
                 pickle.dump(old_dict, out_s, protocol=0)
         except IOError:
-            print 'could not write class_maps properly'
+            print('could not write class_maps properly')
         #-----------step 4:  serialization of scan object-----------
         # write the explicit objects to file
         pickle_name = r'scan_object.p'
@@ -767,7 +774,7 @@ class Scan:
                     except AttributeError:
                         value = getattr(obji.__class__, key)
                     writer.writerow([key, value])
-        print 'save complete:  output directory is {0}'.format(output_folder)
+        print('save complete:  output directory is {0}'.format(output_folder))
         return output_folder
     
     @classmethod
@@ -782,7 +789,7 @@ class Scan:
         try:
             scan_obj = pickle.load(open(foldername + r'\scan_object.p','rb'))
         except pickle.PicklingError:
-            print 'using copied py files to reconstruct subobjects of scan instance'
+            print('using copied py files to reconstruct subobjects of scan instance')
             src_folder = foldername + r'\src'
             class_maps_file = src_folder + r'\class_maps.p' 
             with open(class_maps_file) as f:
@@ -815,7 +822,7 @@ class Scan:
             def map_cls(mod_name, kls_name):
                 # determine whether or not name is one of our mapped names
                 if kls_name in cls_names: 
-                    print mod_name, kls_name
+                    print(mod_name, kls_name)
                     for key, value in old_map.items():
                         key_name, key_module, key_file = value
                         if kls_name == key_name:
@@ -842,8 +849,8 @@ class Scan:
             try:
                 scan_obj.sig = np.load(npy_full_name)
             except:
-                print 'The scan data array could not be imported'  
-                print 'You will have to rerun the simulation'
+                print('The scan data array could not be imported')
+                print('You will have to rerun the simulation')
                 scan_obj.is_run = False
         #----------step 4a:  classes that are not imported----------#
         pulse_class = pulse.__dict__[scan_obj.pulse_class_name]
@@ -892,7 +899,7 @@ class Scan:
             try:
                 scan_obj.sig = np.load(npy_full_name)
             except:
-                print 'could not import the scan data array.  You will have to rerun the simulation'
+                print('could not import the scan data array.  You will have to rerun the simulation')
                 scan_obj.is_run = False
         return scan_obj
         """
@@ -1005,7 +1012,7 @@ class Scan:
                     writer.writerow([key, value])
         finally:
             params.close()
-        print 'output sent to {0}'.format(output_folder)
+        print('output sent to {0}'.format(output_folder))
     
     """
     @classmethod
@@ -1078,7 +1085,7 @@ class Timer:
         self.end = clock()
         self.interval = self.end - self.start
         if self.verbose:
-            print 'elapsed time: {0} sec'.format(self.interval)
+            print('elapsed time: {0} sec'.format(self.interval))
 
 def update_progress(progress, carriage_return = True, length = 50):
     '''
@@ -1093,11 +1100,11 @@ def update_progress(progress, carriage_return = True, length = 50):
     progress_bar = progress_bar + ' {}%'.format(np.round(progress, decimals = 2))
     if carriage_return:
         progress_bar = progress_bar + '\r'
-        print progress_bar,
+        print(progress_bar,)
         return
     if progress == 100:
         progress_bar[-2:] = '\n'
-    print progress_bar
+    print(progress_bar)
 
 def _obj_classfile_copy(obj, destination):
     # properly handle an object for export using pickle
@@ -1130,5 +1137,5 @@ def do_work(arglist):
     if indices[-1] == 0:
         #print str(inhom_object.zeta_bound) + str(len(inhom_object.zeta)) + '\r',    
         #print str(H.tau_ag), str(H.tau_2ag), '\r'
-        print str(indices),  str(pulse_class.timestep), str(iprime) + '              \r',
+        print(str(indices),  str(pulse_class.timestep), str(iprime) + '              \r',)
     return indices, out
