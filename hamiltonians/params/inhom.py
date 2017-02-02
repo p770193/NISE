@@ -5,6 +5,8 @@ Created on Sat Jun 21 14:07:53 2014
 @author: Dan
 """
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from NISE.lib.misc import *
 
 class Inhom():
@@ -32,7 +34,7 @@ class Inhom():
                 try:
                     num = int(num)
                 except TypeError:
-                    print 'no distribution sampling number specified; using 10 points as default'
+                    print('no distribution sampling number specified; using 10 points as default')
                     num = 10
             if 'zeta_bound' in dist_params.keys():
                 zeta_bound = dist_params.get('zeta_bound')
@@ -54,7 +56,7 @@ class Inhom():
                 try:
                     num = int(num)
                 except TypeError:
-                    print 'no distribution sampling number specified; using 10 points as default'
+                    print('no distribution sampling number specified; using 10 points as default')
                     num = 10
             self.zeta = np.linspace(-w,w,num=num)
             self.dzeta = np.abs(self.zeta[1] - self.zeta[0])
@@ -68,8 +70,8 @@ class Inhom():
             try:
                 gh.quad[n]
             except KeyError:
-                print 'no table for quadrature of number {0} is available'.format(n)
-                print 'available quadrature numbers:  {0}'.format(str(gh.quad.keys()))
+                print('no table for quadrature of number {0} is available'.format(n))
+                print('available quadrature numbers:  {0}'.format(str(gh.quad.keys())))
             sigma = dist_params.get('sigma')
             self.zeta = np.array(gh.quad[n])[0]
             self.zweight = np.array(gh.quad[n])[1]

@@ -13,6 +13,8 @@ be specified:
 so create a class where all these can describe the specific instance
 """
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from NISE.lib.misc import *
 
 def gen_w_0(wa_central, a_coupling):
@@ -73,7 +75,7 @@ class Omega:
             if key in Omega.__dict__.keys(): 
                 setattr(self, key, value)
             else:
-                print 'did not recognize attribute {0}.  No assignment made'.format(key)
+                print('did not recognize attribute {0}.  No assignment made'.format(key))
         # with this set, initialize parameter vectors
         self.w_0 = gen_w_0(self.wa_central, self.a_coupling)
         self.Gamma = gen_Gamma_0(self.tau_ag, self.tau_aa, self.tau_2ag, 
