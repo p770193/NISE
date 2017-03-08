@@ -436,10 +436,7 @@ class plot_artist:
         fname = find_name(fname, file_suffix)
         fname = fname + '.' + file_suffix
         self.p1.savefig(fname, **kwargs)
-        print('image saved as {0}'.format(fname))
-    
-    
-
+        print('image saved as {0}'.format(fname))    
 
 class xyz:
     """
@@ -658,7 +655,6 @@ class xyz:
          else:
              print('specified axis is not recognized')
          return out
-
         
 def makefit(**kwargs):
     """

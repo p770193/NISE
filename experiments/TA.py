@@ -11,15 +11,11 @@ one delay
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import importlib
-
 from .. import lib
 from ..lib.misc import *
 from ..lib import scan as S
 #import matplotlib.pyplot as plt
 #from NISE.lib.axis import Axis
-
-importlib.reload(S)
 
 w1 = S.Axis(0, 'w', name=r'$\mathsf{\omega_1 (cm^{-1})}$')
 w2 = S.Axis(1, 'w', also=[2], name=r'$\mathsf{\omega_p (cm^{-1})}$')

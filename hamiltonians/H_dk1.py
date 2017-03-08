@@ -103,7 +103,7 @@ class Omega:
             if key in Omega.__dict__.keys(): 
                 setattr(self, key, value)
             else:
-                print 'did not recognize attribute {0}.  No assignment made'.format(key)
+                print('did not recognize attribute {0}.  No assignment made'.format(key))
         # with this set, initialize parameter vectors
         # w_0 is never actually used for computations; only for reporting back...
         self.w_0 = gen_w_0(self.wa_central, self.a_coupling,

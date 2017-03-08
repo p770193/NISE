@@ -10,6 +10,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 #import csv
 import os, sys
 import csv
+#import cPickle as pickle
 from time import clock, strftime
 #from scipy.interpolate import griddata, interp2d
 
@@ -482,7 +483,7 @@ class Scan:
         kk /= kk.sum()
         # analytical would be 2 * np.pi * s_maj * s_min, but factor 
         # in grid spacings as well (du, dv), but we'll forego this
-        return kk
+        return x,y,kk
 
     def smear(self, ax, ay, fwhm_maj, fwhm_min, theta=np.pi/4., 
               center=None, save=True):
@@ -517,12 +518,12 @@ class Scan:
         if not self.is_run:
             print('no data to perform convolution on!')
             return
-        kk = self.kernel(ax, ay, fwhm_maj, fwhm_min, theta=theta,
+        x,y,kk = self.kernel(ax, ay, fwhm_maj, fwhm_min, theta=theta,
                          center=center)
         # we've created the kernel; let's convolve now
         out = self.sig.copy()
         wm = self.get_color() * wn_to_omega
-        tprime = np.arange(self.sig.shape[-1]) * self.timestep -self.early_buffer
+        tprime = np.arange(self.sig.shape[-1]) * self.timestep - self.early_buffer
         pulse_class= pulse.__dict__[self.pulse_class_name]
         d_ind = pulse_class.cols['d']
         w_ind = pulse_class.cols['w']
@@ -530,6 +531,7 @@ class Scan:
             # bring frames to their own local frequencies (all at wm)
             last_pulse = self.efp[ind][:,d_ind].max()
             ws = self.efp[ind][:,w_ind] * wn_to_omega
+            # kappa_x * tau_x * omega_x for all lasers
             p0 = np.dot(self.pm, ws * self.efp[ind][:, d_ind])
             out[ind] *= np.exp(1j * (wm[ind] * (tprime + last_pulse) - p0))
         transpose_order = list(range(len(self.sig.shape)))
@@ -736,8 +738,9 @@ class Scan:
         #-----------step 5:  write useful properties to readable file-----------
         p_name = r'report.csv'
         p_full_name = '\\'.join([output_folder, p_name])
-        with open(p_full_name,'wb') as params:
+        with open(p_full_name,'w') as params:
             writer = csv.writer(params)
+            print(self.__class__)
             writer.writerow(['----- {0} -----'.format([self.__class__])])
             for index, axis in enumerate(self.axis_objs):
                 writer.writerow(['----- Axis {0} -----'.format([index])])
@@ -785,9 +788,16 @@ class Scan:
         """
         #-----------step 1:  import saved class definition files-----------
         #-----------and define class method/name reassignments-----------
-        # find the tables (if they are there)
+        pickle_name = [p for p in os.listdir(foldername) if p[-2:]=='.p']
+        if len(pickle_name) > 1: # should be only one pickle per directory
+            print('Warning:  more than one pickle in directory {0}'.format(foldername))
+        elif len(pickle_name) == 0: 
+            print('No pickle file found in directory {0}'.format(foldername)) 
+            return
         try:
-            scan_obj = pickle.load(open(foldername + r'\scan_object.p','rb'))
+            scan_obj = pickle.load(open(os.path.join(
+                            foldername, pickle_name[0]),'rb'), 
+                            fix_imports=True, encoding='latin1')
         except pickle.PicklingError:
             print('using copied py files to reconstruct subobjects of scan instance')
             src_folder = foldername + r'\src'
@@ -845,11 +855,20 @@ class Scan:
         #-----------step 3:  import sig data (if applicable)-----------
         # import the npy file if it was saved
         if scan_obj.is_run:
-            npy_full_name = '\\'.join([foldername, cls.npy_name])
+            #npy_full_name = '\\'.join([foldername, cls.npy_name])
+            # try to just load the numpy file in this directory
+            npy_names = [p for p in os.listdir(foldername) if p[-4:]=='.npy']
+            if len(npy_names) > 1: # should be only one pickle per directory
+                print('Warning:  more than one npy file in this directory')
+                print(npy_names)
+            elif len(npy_names) == 0: 
+                print('No npy file found in this directory') 
+                raise FileNotFoundError
             try:
-                scan_obj.sig = np.load(npy_full_name)
-            except:
-                print('The scan data array could not be imported')
+                scan_obj.sig = np.load(os.path.join(foldername, npy_names[0]))
+                #scan_obj.sig = np.load(npy_full_name)
+            except FileNotFoundError:
+                print('The scan data array could not be imported')  
                 print('You will have to rerun the simulation')
                 scan_obj.is_run = False
         #----------step 4a:  classes that are not imported----------#

@@ -23,7 +23,7 @@ class Inhom():
         # values.  if kwargs is not an Omega attribute, it gets ignored
         for key, value in dist_params.items():
             setattr(self, key, value)
-        #print self.__dict__.items()
+        #print(self.__dict__.items())
         # eliminating other quadrature methods; linear works best anyways
         if inhom_sampling == 'linear':
             # currently the only inhomogeneity parameter that can normalize well 

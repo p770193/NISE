@@ -62,13 +62,14 @@ class Omega:
     tau_2aa = 25.
     tau_2ag = 15.
     #transition dipoles (a.u.)
+    dqcs_on = False
     mu_ag =  1.0
     mu_2aa = 1.0 * mu_ag #HO approx (1.414) vs. uncorr. electron approx. (1.)
     #--------------------------Recorded attributes--------------------------
     out_vars = ['dm_vector', 'out_group', 'rho_0', 'mu_ag', 'mu_2aa', 
                 'wa_central', 'a_coupling', 'pc', 'propagator', 'D',
                 'tau_ag', 'tau_aa', 'tau_2aa', 'tau_2ag',
-                'Gamma', 'w_0']
+                'Gamma', 'w_0', 'dqcs_on']
     #--------------------------Methods--------------------------
     def __init__(self, **kwargs):
         # inherit all class attributes unless kwargs has them; then use those 
@@ -138,8 +139,9 @@ class Omega:
         O[:,7,4] =  D12 * mu_2aa * second * rotor(-w2aa*t)     * mu_2aa
         O[:,6,4] = -D10 * mu_ag  * second * rotor(-wag*t)      * mu_ag
         # from 2ag
-        O[:,7,5] = -D21 * mu_ag  * E2     * rotor(wag*t)       * mu_2aa
-        O[:,6,5] =  D21 * mu_2aa * E2     * rotor(w2aa*t)      * mu_ag
+        if self.dqcs_on:
+            O[:,7,5] = -D21 * mu_ag  * E2     * rotor(wag*t)       * mu_2aa
+            O[:,6,5] =  D21 * mu_2aa * E2     * rotor(w2aa*t)      * mu_ag
         
         # make complex according to Liouville Equation
         O *= complex(0,0.5)

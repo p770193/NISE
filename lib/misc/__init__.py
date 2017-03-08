@@ -19,8 +19,7 @@ timestep = 4.0
 # buffers for integration
 early_buffer = 100.0
 late_buffer  = 400.0
-
-wn_to_omega = 2*np.pi*3*10**-5  #omega is radians / fs
+wn_to_omega = 2*np.pi*3*10**-5  # ~5300 cm^-1 = 1 radian / fs
 
 # set the current working directory relative to this
 

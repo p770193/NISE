@@ -14,6 +14,8 @@ so:  free vars to consider:
     
 """
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 from .. import lib
 from ..lib.misc import *
 from ..lib import scan as S
@@ -21,7 +23,7 @@ from ..lib import scan as S
 pulse_class_name = 'Gauss_rwa'
 
 # introduce these all to the namespace
-
+# k_1 - k_2 + k_3
 def assert_pulse_class(pulse_class_name):
     global w1 
     w1 = S.Axis(0, 'w', name=r'$\mathsf{\bar\nu_1}$', 
@@ -32,12 +34,12 @@ def assert_pulse_class(pulse_class_name):
                 name=r'$\mathsf{\bar\nu_2 = \bar\nu_{2^\prime}}$',
                 units = 'wn',
                 pulse_class_name = pulse_class_name)
-    # write d2 in new delay coordinate system--all relative to w2
-    global d1
+    global d1 # tau_2'2
     d1 = S.Axis(2, 'd', name=r'$\mathsf{\tau_{2^\prime 2}}$',
                 units = 'fs',
                 pulse_class_name = pulse_class_name)
-    global d2
+    # write d2 in new delay coordinate system--all relative to E_2
+    global d2 # tau_12
     d2 = S.Axis(0, 'd', name=r'$\mathsf{\tau_{12}}$',
                 units = 'fs',
                 pulse_class_name = pulse_class_name)

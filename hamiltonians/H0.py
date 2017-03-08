@@ -84,7 +84,9 @@ class Omega:
     def o(self, efields, t, wl):
         # combine the two pulse permutations to produce one output array
         E1, E2, E3 = efields[0:3]
-    
+        
+        # to do:  cancel integration here if we don't need to integrate one of
+        # these cases
         out1 = self._gen_matrix(E1, E2, E3, t, wl, w1first = True)
         out2 = self._gen_matrix(E1, E2, E3, t, wl, w1first = False)
 

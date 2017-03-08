@@ -3,8 +3,6 @@
     hamiltonians can collect here
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from .misc import *
 from . import fscolors_beta as fscolors_beta
 import matplotlib.pyplot as plt
@@ -143,7 +141,7 @@ class Measure:
             if num_plots > Measure.plot_lim: 
                 print('number of plots must be less than Measure.plot_lim = ', Measure.plot_lim)
                 raise TypeError
-            for i in xrange(len(self.pol.shape)):
+            for i in range(len(self.pol.shape)):
                 if i not in var_list:
                     index_map.append(i)
         elif dim - plot_dim < 0:
@@ -189,7 +187,7 @@ class Measure:
                 tstr = r''
                 nstr = r'{0} '.format(indices)
                 # generate labels for the plot (tstr) and for the filename (nstr):
-                for i in xrange(len(indices)):
+                for i in range(len(indices)):
                     index = indices[i]
                     tstr += self.scan_obj.axis_objs[index_map[i]].name
                     tstr += ' = {0} '.format(self.scan_obj.axis_objs[
@@ -247,7 +245,7 @@ class Measure:
                 mkdir_p(output_folder)
             indices = range(dim)
             # generate labels for the filename (nstr):
-            for i in xrange(len(indices)):
+            for i in range(len(indices)):
                 index = indices[i]
                 nstr = self.scan_obj.axis_objs[index].pulse_var
             z = self.pol
@@ -429,11 +427,19 @@ class Scatter:
         lo_max = lo.max()
         sig_max = np.abs(sig).sum(axis=-2).max()
         try: # first assume pulse is a list-like type
-            for i in range(len(cls.pulse)): 
-                lo[...,i,:] *= cls.pulse[i]
+            for i in range(lo.shape[-2]): # turn off scatter that is unused
+                #print i, int(i in cls.pulse)
+                lo[...,i,:] *= int(i in cls.pulse)
+            # cls.ratio can be list or integer
+            try:
+                lo *= np.array(cls.ratio)[:,None]
+            except IndexError:
+                lo *= cls.ratio
             lo = lo.sum(axis=-2)
-        except TypeError: lo = lo[...,cls.pulse,:]
-        lo *= sig_max / lo_max * cls.ratio
+        except TypeError:  # cls.pulse is integer
+                # cls.ratio must be integer
+                lo = lo[...,cls.pulse,:]
+                lo *= sig_max / lo_max * cls.ratio
         #--------part 3:  add lo to output signal--------#
         if sig.shape[-1] == lo.shape[-1]:
             if cls.chop: # block the output so baseline can be established
@@ -441,6 +447,8 @@ class Scatter:
                 # outgroups axis is maintained, even though lo doesn't have 
                 # this axis
                 sig *= 0.
+            # trying atm for correct phase purposes
+            sig = sig.real
             sig += lo[...,None,:]
         else:
             print('sig shape does not match lo shape; aborting heterodyne')

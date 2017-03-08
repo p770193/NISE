@@ -1,37 +1,35 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jul 28 17:25:28 2014
+Created on Fri Mar 18 17:29:11 2016
 
-@author: Dan
+Derived from H0:  to use for refractive index incorporation.
+Stop propagation after the populations are formed--use CW modifications after.
+Need to distinguish between a 12,22' pop gratings, so use two different elements
 
+---------------------
 each instance of running this depends on a few initial conditions that have to 
 be specified:
     out_group
     rho_0
     wa_central
-    a_coupling
     gamma
-    dipoles
-
-so create a class where all these can describe the specific instance
+    dipole
 """
 
 from NISE.lib.misc import *
 
-def gen_w_0(wa_central, a_coupling):
+def gen_w_0(wa_central):
     # convert nice system parameters into system vector indeces
     w_ag = wa_central
-    w_2aa = w_ag - a_coupling
-    w_2ag = 2*w_ag - a_coupling
     w_gg = 0.
     w_aa = w_gg
-    return np.array( [w_gg, w_ag, -w_ag, w_gg, w_aa, w_2ag, w_ag, w_2aa] )
+    return np.array( [w_gg, w_ag, -w_ag, w_aa, w_aa] )
 
-def gen_Gamma_0(Gamma_ag, Gamma_aa, Gamma_2ag, Gamma_2aa):
+def gen_Gamma_0(tau_ag, tau_aa):
     # same as gen_w_0, but for dephasing/relaxation times
-    Gamma = np.array( [0.0, Gamma_ag, Gamma_ag, 
-                       Gamma_aa, Gamma_aa, Gamma_2ag, 
-                       Gamma_ag, Gamma_2aa ] )
+    tau = np.array( [np.inf, tau_ag, tau_ag, 
+                     tau_aa, tau_aa] )
+    Gamma = 1/tau
     return Gamma
 
 class Omega:
@@ -40,37 +38,27 @@ class Omega:
     # phase cycling is not valuable in this hamiltonian
     pc = False
     # all attributes should have good initial guesses for parameters
-    dm_vector = [
-        '00><00',
-        '11><00', '1m1><00', '00><11', '00><1m1', 
-        '11><11', '00><00', '1m1><11', '11><1m1', '1m1><1m1',
-        '22><00', '20><00', '2m2><00',
-        '22><11', '2m2><1m1', '20><11', '20><1m1', '11><00', '1m1><00'
-    ]
-    #out_group = [[6,7]]#,[7]]
-    out_group = [[6,7]]
+    dm_vector = ['gg1','ag','ga','aa22', 'aa12']
+    out_group = [[3],[4]] # use this to separate 12 from 22 population
     #--------------------------Oscillator Properties--------------------------
-    rho_0 = np.zeros((8), dtype=np.complex64)
+    rho_0 = np.zeros((len(dm_vector)), dtype=np.complex64)
     rho_0[0] = 1.
-    #1S exciton central position
+    # 1S exciton central position
     wa_central = 7000.
-    #exciton-exciton coupling
-    a_coupling = 0.0
-    #dephasing times, 1/fs
-    Gamma_1x0x  = 1./60
-    Gamma_1x1x  = 0.
-    Gamma_2x0x  = 1./60
-    Gamma_2x1x  = 1./60
-    Gamma_axbx  = 1./500
-    #transition dipoles (a.u.)
+    # dephasing times, fs
+    tau_ag  = 50.
+    tau_aa  = np.inf #1./2000.
     mu_ag =  1.0
-    mu_2aa = 1.0 * mu_ag #HO approx (1.414) vs. uncorr. electron approx. (1.)
+    # TOs sets which time-ordered pathways to include (1-6 for TrEE)
+    # defaults to include all time-orderings included
+    TOs = np.array([1,3,5,6]) 
     #--------------------------Recorded attributes--------------------------
-    out_vars = ['dm_vector', 'out_group', 'rho_0', 'mu_ag', 'mu_2aa', 
-                'wa_central', 'a_coupling', 'pc', 'propagator', 'Gamma',
-                'rlphase']
+    out_vars = ['dm_vector', 'out_group', 'rho_0', 'mu_ag', 
+                'tau_ag', 'tau_aa',
+                'wa_central', 'pc', 'propagator', 
+                'TOs']
     #--------------------------Methods--------------------------
-    def __init__(self, rlphase=[0,0,0],**kwargs):
+    def __init__(self, **kwargs):
         # inherit all class attributes unless kwargs has them; then use those 
         # values.  if kwargs is not an Omega attribute, it gets ignored
         # careful: don't redefine instance methods as class methods!
@@ -80,9 +68,8 @@ class Omega:
             else:
                 print('did not recognize attribute {0}.  No assignment made'.format(key))
         # with this set, initialize parameter vectors
-        self.rlphase=rlphase
-        self.w_0 = gen_w_0(self.wa_central, self.a_coupling)
-        self.Gamma = gen_Gamma_0(self.Gamma_ag, self.Gamma_aa, self.Gamma_2ag, self.Gamma_2aa)
+        self.w_0 = gen_w_0(self.wa_central)
+        self.Gamma = gen_Gamma_0(self.tau_ag, self.tau_aa)
 
     def o(self, efields, t, wl):
         # combine the two pulse permutations to produce one output array
@@ -105,50 +92,39 @@ class Omega:
         outside of the matrix
         """
         wag  = wl[1]
-        w2aa = wl[7]
         
         mu_ag = self.mu_ag
-        mu_2aa = self.mu_2aa
-    
-        E1r = E1
-        E2r = E2
-        E3r = E3
-        # decompose e-field into r and l components according to rlphase    
-        rl_phase_factor = np.exp(1j*self.rlphase)
-        E1l = E1 * rl_phase_factor[0]
-        E2l = E2 * rl_phase_factor[1]
-        E3l = E3 * rl_phase_factor[2]
     
         if w1first==True:
-            firstr  = E1r
-            firstl  = E1l
-            secondr = E3r
-            secondl = E3l
+            first  = E1
+            #second = E3
         else:
-            firstr  = E3r
-            firstl  = E3l
-            secondr = E1r
-            secondl = E1l
+            first  = E3
+            #second = E1
+
         O = np.zeros((len(t), len(wl), len(wl)), dtype=np.complex64)
         # from gg1
         O[:,1,0] =  mu_ag  * first  * rotor(-wag*t)
         O[:,2,0] = -mu_ag  * E2     * rotor(wag*t)
         # from ag1
-        O[:,4,1] = -mu_ag  * E2     * rotor(wag*t)
-        O[:,5,1] =  mu_2aa * second * rotor(-w2aa*t)
-        O[:,3,1] =  mu_ag  * E2     * rotor(wag*t)
+        #   to pop
+        if w1first and 1 in self.TOs:
+            O[:,4,1] =  -mu_ag  * E2     * rotor(wag*t)
+        if not w1first and 6 in self.TOs:
+            O[:,3,1] =  -mu_ag  * E2     * rotor(wag*t)
         # from ga
-        O[:,4,2] =  mu_ag  * first  * rotor(-wag*t)
-        O[:,3,2] = -mu_ag  * first  * rotor(-wag*t)
-        # from gg2
-        O[:,6,3] =  mu_ag  * second * rotor(-wag*t)      * mu_ag
-        # from aa
-        O[:,7,4] =  mu_2aa * second * rotor(-w2aa*t)     * mu_2aa
-        O[:,6,4] = -mu_ag  * second * rotor(-wag*t)      * mu_ag
-        # from 2ag
-        O[:,7,5] = -mu_ag  * E2     * rotor(wag*t)       * mu_2aa
-        O[:,6,5] =  mu_2aa * E2     * rotor(w2aa*t)      * mu_ag
+        if w1first and 3 in self.TOs:
+            O[:,4,2] =  mu_ag  * first  * rotor(-wag*t)
+        if not w1first and 5 in self.TOs:
+            O[:,3,2] =  mu_ag  * first  * rotor(-wag*t)
         
+        # make complex according to Liouville Equation
+        O *= complex(0,0.5)
+        
+        # include coherence decay rates:
+        for i in range(O.shape[-1]):
+            O[:,i,i] = -self.Gamma[i]
+
         return O
     
     def ws(self, inhom_object):
@@ -160,15 +136,10 @@ class Omega:
         
         wg = 0.0 + 0*z
         wa = z + self.wa_central
-        w2a = 2*wa - self.a_coupling
     
         w_ag = wa - wg
         w_aa = wa - wa
         w_gg = wg - wg
-        w_2ag = w2a - wg
-        w_2aa = w2a - wa
         #array aggregates all frequencies to match state vectors
-        
-        w     = np.array( [w_gg, w_ag, -w_ag, w_gg, w_aa, w_2ag, w_ag, w_2aa] )
-        
+        w     = np.array( [w_gg, w_ag, -w_ag, w_aa, w_aa] )
         return w
