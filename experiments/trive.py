@@ -34,6 +34,11 @@ def assert_pulse_class(pulse_class_name):
                 name=r'$\mathsf{\bar\nu_2 = \bar\nu_{2^\prime}}$',
                 units = 'wn',
                 pulse_class_name = pulse_class_name)
+    global ws
+    ws = S.Axis(0, 'w', also=[1,2], 
+                name=r'$\mathsf{\omega_1 = \omega_2 = \omega_{2^\prime}}$',
+                units = 'wn',
+                pulse_class_name = pulse_class_name)
     global d1 # tau_2'2
     d1 = S.Axis(2, 'd', name=r'$\mathsf{\tau_{2^\prime 2}}$',
                 units = 'fs',
@@ -42,11 +47,6 @@ def assert_pulse_class(pulse_class_name):
     global d2 # tau_12
     d2 = S.Axis(0, 'd', name=r'$\mathsf{\tau_{12}}$',
                 units = 'fs',
-                pulse_class_name = pulse_class_name)
-    global ws
-    ws = S.Axis(0, 'w', also=[1,2], 
-                name=r'$\mathsf{\omega_1 = \omega_2 = \omega_{2^\prime}}$',
-                units = 'wn',
                 pulse_class_name = pulse_class_name)
     global A1 
     A1 = S.Axis(0, 'A', name=r'$k_1$ Fluence (a.u.)',

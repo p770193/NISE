@@ -16,7 +16,6 @@ Rules for creating a pulse class method:
         t
 """
 
-
 from .misc import *
 
 # factor used to convert FWHM to stdev for function definition
@@ -35,8 +34,12 @@ def _get_t(obj, d):
     else:
         t_min = d.min() - obj.early_buffer
         t_max = d.max() + obj.late_buffer
-    # span up to and including t_max now
-    t = np.arange(t_min, t_max+obj.timestep, obj.timestep)
+    # time axis must end *at* t_max--keeps output easily phased
+    t = np.arange(t_min, t_max + obj.timestep, obj.timestep)
+    # adjust so that endpoint is always the same
+    t -= t[-1]-t_max
+    #print(d)
+    #print(t.min(), t.max(), t.max()-t.min())
     # alternate form:
     return t
 
@@ -201,7 +204,7 @@ class Gauss_rwa:
         else:
             cc = np.sign(pm)
         x = rotor(cc[:,None]*(freq[:,None]*(t[None,:] - mu[:,None])+p[:,None]))
-        x*= y[:,None] * np.exp(-(t[None,:] - mu[:,None])**2 / (2*sigma[:,None]**2) ) 
+        x*= y[:,None] * np.exp(-(t[None,:] - mu[:,None])**2 / (2*sigma[:,None]**2)) 
         return t, x
     
     @classmethod

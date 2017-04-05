@@ -51,7 +51,7 @@ class Omega:
     # exciton-exciton coupling
     # dephasing times, fs
     tau_ag  = 5.
-    tau_aa  = 50. #1./2000.
+    tau_aa  = 60. #1./2000.
     tau_bb = np.inf
     tau_bg = tau_ag
     # transition dipoles (a.u.)
@@ -130,8 +130,8 @@ class Omega:
             O[:,3,1] =  -mu_ag  * E2     * rotor(wag*t)
             O[:,4,1] =  -mu_ag  * E2     * rotor(wag*t)
         # from ga
-        O[:,4,2] =  mu_ag  * first  * rotor(-wag*t)
         O[:,3,2] =  mu_ag  * first  * rotor(-wag*t)
+        O[:,4,2] =  mu_ag  * first  * rotor(-wag*t)
         # from gg-aa
         O[:,5,3]  = -mu_ag  * second * rotor(-wag*t)      * mu_ag
         #   because of alpha and gamma pathways, count twice

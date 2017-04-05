@@ -471,8 +471,8 @@ class Scan:
             center = [x.sum() / x.size, y.sum()/y.size]
         x -= center[0]
         y -= center[1]
-        s_maj = fwhm_maj / 2*np.sqrt(2*np.log(2))
-        s_min = fwhm_min / 2*np.sqrt(2*np.log(2))
+        s_maj = fwhm_maj / (2*np.sqrt(2*np.log(2)))
+        s_min = fwhm_min / (2*np.sqrt(2*np.log(2)))
         # u is the major axis, y is the minor axis
         uu = np.cos(theta)*x[None,:] + np.sin(theta) * y[:,None]
         vv = np.cos(theta)*y[:,None] - np.sin(theta) * x[None,:]
@@ -518,12 +518,14 @@ class Scan:
         if not self.is_run:
             print('no data to perform convolution on!')
             return
+        # create smear kernel
         x,y,kk = self.kernel(ax, ay, fwhm_maj, fwhm_min, theta=theta,
                          center=center)
-        # we've created the kernel; let's convolve now
+        # convolve
         out = self.sig.copy()
         wm = self.get_color() * wn_to_omega
-        tprime = np.arange(self.sig.shape[-1]) * self.timestep - self.early_buffer
+        tprime = np.arange(self.sig.shape[-1]) * self.timestep
+        tprime -= tprime[-1]-self.late_buffer
         pulse_class= pulse.__dict__[self.pulse_class_name]
         d_ind = pulse_class.cols['d']
         w_ind = pulse_class.cols['w']
@@ -542,8 +544,7 @@ class Scan:
         #print transpose_order
         out = out.transpose(*transpose_order)
         
-        # loop through and convolve
-        #####
+        ### loop through and convolve
         from multiprocessing import Pool, cpu_count
         arglist = [[ind, out[ind], kk] for ind in np.ndindex(out.shape[:-2])]
         pool = Pool(processes=cpu_count())
@@ -738,7 +739,7 @@ class Scan:
         #-----------step 5:  write useful properties to readable file-----------
         p_name = r'report.csv'
         p_full_name = '\\'.join([output_folder, p_name])
-        with open(p_full_name,'w') as params:
+        with open(p_full_name,'w',newline='') as params:
             writer = csv.writer(params)
             print(self.__class__)
             writer.writerow(['----- {0} -----'.format([self.__class__])])
