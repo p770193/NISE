@@ -162,7 +162,7 @@ class Measure:
                 artist = fscolors_beta.plot_artist(xaxis=x_obj, yaxis=y_obj)
             else:
                 # 1D scans
-                artist = fscolors_beta.plot_artist(xlabel=x_obj)
+                artist = fscolors_beta.plot_artist(xaxis=x_obj)
 
         # define a global max
         z_max, z_min = self.pol.max(), self.pol.min()
