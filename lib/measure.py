@@ -183,7 +183,7 @@ class Measure:
                 output_folder += r' - x={0}, y={1}'.format(xaxis, yaxis)
                 mkdir_p(output_folder)
             # a loop to write plots (if necessary)
-            for indices in np.ndindex(np.array(iterator_shape)):
+            for indices in np.ndindex(np.array(*iterator_shape)):
                 tstr = r''
                 nstr = r'{0} '.format(indices)
                 # generate labels for the plot (tstr) and for the filename (nstr):

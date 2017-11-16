@@ -196,7 +196,7 @@ class Scan:
         self.inv_cols = {v:k for k, v in pulse_class.cols.items()}
         self.npulses = self.positions.shape[0]
         self.pm = np.array(pm)
-        array_shape = np.zeros((len(axis_objs)))
+        array_shape = np.zeros((len(axis_objs)), dtype=int)
         # make sure we have some axes to scan
         # if not, make the array the default points
         self.coords_set = []
