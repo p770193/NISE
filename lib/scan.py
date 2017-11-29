@@ -33,7 +33,7 @@ from . import pulse as pulse
 # a default directory for dumping saves is the data folder
 default_path = os.path.realpath(__file__).split(os.path.sep)[:-2]
 default_path.append('data')
-default_path = os.path.join(default_path)
+default_path = os.path.join(*default_path)
 
 class Axis:
     """
@@ -592,7 +592,7 @@ class Scan:
                 #'phase_index' : phase_index
             }
             p_name = r'kernel.csv'
-            p_full_name = os.path.join([self.output_folder, p_name])
+            p_full_name = os.path.join(self.output_folder, p_name)
             with open(p_full_name,'wb') as params:
                 writer = csv.writer(params)
                 writer.writerow(['----- kernel params -----'])
@@ -684,7 +684,7 @@ class Scan:
             else:
                 self.foldername = ' - '.join([foldertime, name])
             # create folder for output files 
-            output_folder = os.path.join([default_path, self.foldername])
+            output_folder = os.path.join(default_path, self.foldername)
         else:
             output_folder = full_name
         # save the output folder for pointing in other exports
@@ -694,7 +694,7 @@ class Scan:
         #-----------step 2:  write signal to file (if exists)-----------
         if self.is_run:
             while True:
-                npy_full_name = os.path.join([output_folder, self.__class__.npy_name])
+                npy_full_name = os.path.join(output_folder, self.__class__.npy_name)
                 np.save(npy_full_name, self.sig)
                 break
             # if we make it out of the loop, we can safely delete the data
@@ -719,7 +719,7 @@ class Scan:
         }
         # write dictionary to file for lookup when importing
         pickle_name = r'class_maps.p'
-        pickle_full_name = os.path.join([src_folder, pickle_name])
+        pickle_full_name = os.path.join(src_folder, pickle_name)
         try:
             with open(pickle_full_name, 'wb') as out_s:
                 pickle.dump(old_dict, out_s, protocol=0)
@@ -728,7 +728,7 @@ class Scan:
         #-----------step 4:  serialization of scan object-----------
         # write the explicit objects to file
         pickle_name = r'scan_object.p'
-        pickle_full_name = os.path.join([output_folder, pickle_name])
+        pickle_full_name = os.path.join(output_folder, pickle_name)
         out_s = open(pickle_full_name, 'wb')
         try:
             pickle.dump(self, out_s)
@@ -738,7 +738,7 @@ class Scan:
             self.sig = sig
         #-----------step 5:  write useful properties to readable file-----------
         p_name = r'report.csv'
-        p_full_name = os.path.join([output_folder, p_name])
+        p_full_name = os.path.join(output_folder, p_name)
         with open(p_full_name,'w',newline='') as params:
             writer = csv.writer(params)
             print(self.__class__)
@@ -811,7 +811,7 @@ class Scan:
                 # names will remain unchanged, but modules will change
                 key_name, key_module, key_file = value
                 cls_names.append(key_name)
-                key_filepath = os.path.join([src_folder, key_file])
+                key_filepath = os.path.join(src_folder, key_file)
                 if os.path.isfile(key_filepath):
                     # name the module uniquely so that overwrites are unlikely
                     new_module = '.'.join([foldername.split(os.path.sep)[-1],
@@ -856,7 +856,7 @@ class Scan:
         #-----------step 3:  import sig data (if applicable)-----------
         # import the npy file if it was saved
         if scan_obj.is_run:
-            #npy_full_name = os.path.join([foldername, cls.npy_name])
+            #npy_full_name = os.path.join(foldername, cls.npy_name)
             # try to just load the numpy file in this directory
             npy_names = [p for p in os.listdir(foldername) if p[-4:]=='.npy']
             if len(npy_names) > 1: # should be only one pickle per directory
@@ -915,7 +915,7 @@ class Scan:
         # import the npy file if it was saved
         if scan_obj.is_run:
             import_folder = os.path.dirname(filepath)
-            npy_full_name = os.path.join([import_folder, cls.npy_name])
+            npy_full_name = os.path.join(import_folder, cls.npy_name)
             try:
                 scan_obj.sig = np.load(npy_full_name)
             except:
@@ -957,13 +957,13 @@ class Scan:
         if foldername is None:
             foldername = strftime("%Y.%m.%d %H-%M-%S")
         # create folder for output files 
-        output_folder = os.path.join([default_path, foldername])
+        output_folder = os.path.join(default_path, foldername)
         os.makedirs(output_folder)
         self.output_folder = output_folder
         # first, write the sig array to a npz file (if it exists)
         if self.is_run:
             while True:
-                npy_full_name = os.path.join([output_folder, self.__class__.npy_name])
+                npy_full_name = os.path.join(output_folder, self.__class__.npy_name)
                 np.save(npy_full_name, self.sig)
                 break
             # if we make it out of the loop, we can safely delete the data
@@ -974,7 +974,7 @@ class Scan:
             del self.sig
         # write the explicit objects to file
         pickle_name = r'scan_object.pickle'
-        pickle_full_name = os.path.join([output_folder, pickle_name])
+        pickle_full_name = os.path.join(output_folder, pickle_name)
         out_s = open(pickle_full_name, 'wb')
         try:
             # Write to the stream
@@ -990,7 +990,7 @@ class Scan:
         # create dictionaries of the information that should be well-formated
         # and readable; to be exported as crv or something similar
         p_name = r'report.csv'
-        p_full_name = os.path.join([self.output_folder, p_name])
+        p_full_name = os.path.join(self.output_folder, p_name)
         params = open(p_full_name,'wb')
         writer = csv.writer(params)
         try:
@@ -1047,7 +1047,7 @@ class Scan:
         # import the npy file if it was saved
         if scan_obj.is_run:
             import_folder = os.path.dirname(filepath)
-            npy_full_name = os.path.join([import_folder, cls.npy_name])
+            npy_full_name = os.path.join(import_folder, cls.npy_name)
             try:
                 scan_obj.sig = np.load(npy_full_name)
             except:
