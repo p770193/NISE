@@ -23,14 +23,7 @@ wn_to_omega = 2*np.pi*3*10**-5  # ~5300 cm^-1 = 1 radian / fs
 
 # set the current working directory relative to this
 
-def rotor(theta):
-    """
-    returns 1 rotated CW about the complex plane by angle theta i.e. e^(-i*theta)
-    can work on scalars as well as higher rank objects
-    note:  can be replaced by np.exp(-j*theta)
-    """
-    #return complex(np.cos(theta), -np.sin(theta))
-    return np.cos(theta)*complex(1,0) - np.sin(theta)*complex(0,1)
+rotor = lambda theta: np.exp(-1j * theta)
     
 import os, errno
 def mkdir_p(path):
