@@ -116,10 +116,6 @@ class Omega:
     # to get a dummy matrix that shows connectivities, run
     # _gen_matrix(1,1,1,0,np.zeros((len(dm_vector))))
     def _gen_matrix(self, E1, E2, t, wl, E1first = True):
-        """
-        creates the coupling array given the input e-fields values for a specific time, t
-        w1first selects whether w1 or w2p is the first interacting positive field
-        """
         wag, wbg, w2ag, w2bg, wcg = wl[1:]
         w2aa = w2ag - wag
         w2bb = w2bg - wbg
